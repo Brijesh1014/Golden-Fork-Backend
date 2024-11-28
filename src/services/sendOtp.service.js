@@ -1,7 +1,6 @@
 const { sendMail, renderEjsTemplate } = require("../utils/email.utils");
 
-const sendOtp = async (otp, email, receiverEmail, ejsPath) => {
-  const subject = "Your OTP for Password Reset";
+const sendOtp = async (otp, email, receiverEmail,subject, ejsPath) => {
   const ejsProps = {
     otp,
   };

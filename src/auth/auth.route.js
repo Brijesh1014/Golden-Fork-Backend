@@ -4,6 +4,7 @@ const auth = require("../middleware/auth.middleware");
 const router = express.Router();
 
 router.post("/register", authController.register);
+router.post("/verifyEmail", authController.verifyEmail);
 router.post("/login", authController.login);
 router.post("/forgetPassword", authController.forgetPassword);
 router.post("/verifyOtp", authController.verifyOtp);

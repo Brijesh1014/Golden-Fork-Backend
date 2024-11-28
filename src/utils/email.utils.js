@@ -12,8 +12,9 @@ const transporter = nodemailer.createTransport({
 
 const sendMail = async (name, email, receiverEmail, subject, text, html) => {
   try {
-    await nodeMailerFunc(email, receiverEmail, subject, text, html);
+    const response = await nodeMailerFunc(email, receiverEmail, subject, text, html);
     console.log(`Mail sent to ${receiverEmail}`);
+    return response
   } catch (err) {
     console.log(`Mail error: ${err}`);
   }

@@ -4,13 +4,15 @@ const bcrypt = require("bcrypt");
 const { generateTokens } = require("../utils/generate.token");
 const jwt = require("jsonwebtoken");
 const sendOtp = require("../services/sendOtp.service");
+const sentEmail = require("../services/sentEmail.service")
 const dotenv = require("dotenv");
 dotenv.config();
 
 const register = async (req, res) => {
   try {
     const {
-      name,
+      firstName,
+      lastName,
       email,
       phoneNumber,
       username,
@@ -20,28 +22,29 @@ const register = async (req, res) => {
       city,
       zipCode,
       deliveryAddress,
-      rewardPoints ,
+      rewardPoints,
       role,
     } = req.body;
+
+    if (!firstName || !lastName || !email ) {
+      return res
+        .status(400)
+        .json({ message: "Please provide all required fields." });
+    }
 
     const existingUser = await User_Model.findOne({ email });
     if (existingUser) {
       return res
         .status(400)
-        .json({ message: "User already exists with that email" });
-    }
-
-    if (!name || !email) {
-      return res
-        .status(400)
-        .json({ message: "Please enter all required fields" });
+        .json({ message: "User already exists with this email." });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User_Model({
-      name,
+      firstName,
+      lastName,
       email,
       username,
       password: hashedPassword,
@@ -52,17 +55,71 @@ const register = async (req, res) => {
       role,
       phoneNumber,
       deliveryAddress,
-      rewardPoints 
+      rewardPoints,
     });
+
     await newUser.save();
+
+    if (role === "User" || role === "Customer") {
+      const otp = generateOTP();
+      newUser.resetOtp = otp;
+      newUser.otpExpiry = Date.now() + 10 * 60 * 1000;
+      await newUser.save();
+      await sendOtp(
+        otp,
+        "Golden-Fork",
+        email,
+        "Your OTP for Email Verification",
+        "../views/emailVerification.ejs"
+      );
+    }
+
     res.status(201).json({
       success: true,
       data: newUser,
-      message: "User registered successfully",
+      message: "User registered successfully. Please verify your email.",
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+const verifyEmail = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    console.log('email: ', email);
+
+    const user = await User_Model.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    if (user.resetOtp !== otp || Date.now() > user.otpExpiry) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+          let name  = `${user?.firstName} ${user?.lastName}`
+
+    user.isEmailVerified = true;
+    user.otpExpiry = undefined;
+    user.resetOtp = undefined;
+    await user.save();
+    if(user.isEmailVerified){
+      await sentEmail(
+        "https://golden-fork-backend.vercel.app/api/auth/login",
+        "Golden-Fork",       
+        name,          
+        user.email,
+        "Register successfully",
+        "../views/registerSuccessfully.ejs"
+      );
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Email verified successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -85,11 +142,7 @@ const login = async (req, res) => {
     }
 
     const { accessToken, refreshToken, accessTokenExpiry, refreshTokenExpiry } =
-      await generateTokens(
-        email,
-        user?._id,
-        user?.role,
-      );
+      await generateTokens(email, user?._id, user?.role);
 
     return res.status(200).json({
       success: true,
@@ -126,7 +179,7 @@ const forgetPassword = async (req, res) => {
     user.otpExpiry = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    await sendOtp(otp, "Golden-Fork", email, "../views/sendOtp.ejs");
+    await sendOtp(otp, "Golden-Fork", email,"OTP for Password Reset", "../views/sendOtp.ejs");
 
     return res
       .status(200)
@@ -213,7 +266,7 @@ const resendOtp = async (req, res) => {
     user.otpExpiry = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    await sendOtp(otp, "Golden-Fork", email, "../views/resendOtp.ejs");
+    await sendOtp(otp, "Golden-Fork", email,"OTP for Password Reset", "../views/resendOtp.ejs");
     return res
       .status(200)
       .json({ success: true, message: "OTP resend successfully" });
@@ -311,7 +364,7 @@ const refreshToken = async (req, res) => {
           {
             id: user.id,
             email: user.email,
-            role:user?.role
+            role: user?.role,
           },
           process.env.ACCESS_TOKEN_PRIVATE_KEY,
           { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
@@ -370,6 +423,7 @@ const saveFcmToken = async (req, res) => {
 
 module.exports = {
   register,
+  verifyEmail,
   login,
   forgetPassword,
   verifyOtp,
@@ -378,5 +432,5 @@ module.exports = {
   changePassword,
   logout,
   refreshToken,
-  saveFcmToken
+  saveFcmToken,
 };
