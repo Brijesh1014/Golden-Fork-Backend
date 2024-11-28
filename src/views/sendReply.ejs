@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reply to Inquiry</title>
+
+
+</head>
+
+<body style="height: 100vh; width: fit-content;">
+
+    <div class="form-container" style="
+    background: rgb(232, 232, 233); border: 1px solid rgb(135, 135, 135); border-radius: 30px; padding: 20px;">
+        <img src="https://res.cloudinary.com/dzfuuqo6g/image/upload/v1710417035/brainerhub_logo_dk6xdz.png"
+            style="height: 45px;">
+        <form id="sendReply" action="/sendReply" method="POST" style="
+            padding: 1rem 1rem;">
+            <p id="receiverName" for="password" style="
+            padding: 0.25rem 0.25rem; font-size: medium; font-size: medium;
+    margin: 0;">
+                Dear <%= name %>,
+            </p>
+
+            <p id="message" style="
+                text-align: start; font-size: medium;
+                padding: 1rem 0.25rem; 
+    margin: 0;">
+                <%= messageContent %>
+            </p>
+
+            <div style="
+            padding: 1rem 0.25rem;">
+                <p style="
+                text-align: start; font-size: medium;
+    margin: 0;">
+                    Thanks and Regards,
+                </p>
+                <p style="
+                text-align: start; font-size: medium;
+    margin: 0;">
+                    BrainerHub
+                </p>
+            </div>
+        </form>
+    </div>
+
+
+</body>
+
+</html>

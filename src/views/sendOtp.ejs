@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP for Password Reset</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #C29671;
+            border-radius: 5px;
+            background-color: #C29671;
+        }
+
+        .container p {
+            color: #000;
+            font-size: 16px;
+            line-height: 22px;
+        }
+
+        .header {
+            text-align: center;
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="header">Your OTP for Password Reset</h2>
+        <p style="font-weight: 600;">Hello,</p>
+        <p>Your OTP for password reset is:</p>
+        <p
+            style="font-size: 18px; padding: 6px 13px; display: inline-block; border-radius: 6px; background-color: #fff;">
+            <strong>
+                <%= otp %>
+            </strong>
+        </p>
+        <p>This OTP is valid for 10 minutes.</p>
+        <p>If you did not request a password reset, please ignore this email.</p>
+        <p style="margin-top: 20px;"><span style="font-weight: 600;">Best regards,</span><br>Your Application Team</p>
+    </div>
+</body>
+
+</html>
