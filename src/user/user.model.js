@@ -49,6 +49,14 @@ const User = new Schema(
       enum: ["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"],
       default: "Customer",
     },
+    restaurants:[{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
+    }],
+    kitchens:[{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Kitchen",
+    }],
 
     fcmToken: {
       type: String,

@@ -7,6 +7,9 @@ require("./src/config/db.connection");
 const app = express();
 const PORT = process.env.PORT || 4000;
 const authRoute = require("./src/auth/auth.route");
+const restaurantRoute = require("./src/restaurant/restaurant.route")
+const menuRoute = require("./src/menus/menu.route");
+const menuItemRoute= require("./src/menuItem/menuItem.route");
 
 app.set("view engine", "ejs");
 const viewsDir = path.join(__dirname, "./src/views");
@@ -27,6 +30,9 @@ app.get("/", async function (req, res) {
 });
 
 app.use("/api/auth", authRoute);
+app.use("/api/restaurant",restaurantRoute)
+app.use("/api/menu", menuRoute);
+app.use("/api/menuItem", menuItemRoute);
 
 app.listen(PORT, () => {
   console.log(`Server up and running on port ${PORT}!`);

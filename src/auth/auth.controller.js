@@ -60,7 +60,7 @@ const register = async (req, res) => {
 
     await newUser.save();
 
-    if (role === "User" || role === "Customer") {
+    if ( role === "Customer") {
       const otp = generateOTP();
       newUser.resetOtp = otp;
       newUser.otpExpiry = Date.now() + 10 * 60 * 1000;
@@ -87,7 +87,6 @@ const register = async (req, res) => {
 const verifyEmail = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    console.log('email: ', email);
 
     const user = await User_Model.findOne({ email });
     if (!user) {
@@ -126,12 +125,12 @@ const verifyEmail = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User_Model.findOne({ email: email });
+    const user = await User_Model.findOne({ email: email ,isEmailVerified:true});
 
     if (!user) {
       return res
         .status(400)
-        .json({ status: -1, message: "You have to register", success: false });
+        .json({ status: -1, message: "You have to register or please verify your email", success: false });
     }
 
     const match = await bcrypt.compare(password, user.password);
@@ -165,7 +164,7 @@ const generateOTP = () => {
 const forgetPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User_Model.findOne({ email });
+    const user = await User_Model.findOne({ email: email ,isEmailVerified:true});
 
     if (!user) {
       return res
@@ -194,7 +193,7 @@ const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const user = await User_Model.findOne({ email });
+    const user = await User_Model.findOne({ email: email ,isEmailVerified:true});
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
@@ -219,7 +218,7 @@ const resetPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
 
-    const user = await User_Model.findOne({ email });
+    const user = await User_Model.findOne({ email: email ,isEmailVerified:true});
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
@@ -253,7 +252,7 @@ const resendOtp = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User_Model.findOne({ email });
+    const user = await User_Model.findOne({ email: email ,isEmailVerified:true});
     if (!user) {
       return res
         .status(400)
@@ -280,7 +279,7 @@ const changePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const userId = req.userId;
 
-    const user = await User_Model.findById(userId);
+    const user = await User_Model.findOne({_id:userId,isEmailVerified:true});
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -307,7 +306,7 @@ const changePassword = async (req, res) => {
 const logout = async (req, res) => {
   try {
     const userId = req.userId;
-    const user = await User_Model.findOne({ _id: userId });
+    const user = await User_Model.findOne({ _id: userId, isEmailVerified:true });
     if (!user) {
       return res
         .status(400)
