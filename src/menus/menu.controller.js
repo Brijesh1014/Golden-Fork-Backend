@@ -1,3 +1,4 @@
+const menuItem = require("../menuItem/menuItem.model");
 const restaurant = require("../restaurant/restaurant.model");
 const Menu = require("./menu.model");
 
@@ -133,6 +134,7 @@ const deleteMenu = async (req, res) => {
       { $unset: { menuId: "" } },
       { new: true }
     );
+    await menuItem.deleteMany(menu._id)
 
     return res
       .status(200)

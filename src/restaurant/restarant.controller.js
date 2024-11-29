@@ -1,3 +1,4 @@
+const menuItem = require("../menuItem/menuItem.model");
 const menu = require("../menus/menu.model");
 const User_Model = require("../user/user.model");
 const Restaurant = require("./restaurant.model");
@@ -234,21 +235,39 @@ const updateRestaurantById = async (req, res) => {
 
 const deleteRestaurantById = async (req, res) => {
   try {
-    const deletedRestaurant = await Restaurant.findByIdAndDelete(req.params.id);
+    const restaurantId = req.params.id;
+
+    const deletedRestaurant = await Restaurant.findByIdAndDelete(restaurantId);
+
     if (!deletedRestaurant) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Restaurant not found" });
+      return res.status(404).json({ success: false, error: "Restaurant not found" });
     }
-    res
-      .status(200)
-      .json({ success: true, message: "Restaurant deleted successfully" });
+
+    const restaurantAdminId = deletedRestaurant.restaurantAdminId;
+
+    const user = await User_Model.findById(restaurantAdminId);
+
+    if (user) {
+      user.restaurants = user.restaurants.filter(
+        (restaurant) => restaurant.toString() !== restaurantId
+      );
+
+      await user.save();
+    } else {
+      return res.status(400).json({ success: false, message: "User not found" });
+    }
+
+   let menuId= await menu.findOneAndDelete({ restaurantId: restaurantId });
+
+    await menuItem.deleteMany({menuId});
+    res.status(200).json({ success: true, message: "Restaurant and associated data deleted successfully" });
+
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+    res.status(500).json({ error: "Internal server error", details: error.message });
   }
 };
+
+
 
 module.exports = {
   createRestaurant,

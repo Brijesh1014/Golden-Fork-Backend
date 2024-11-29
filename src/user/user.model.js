@@ -49,14 +49,18 @@ const User = new Schema(
       enum: ["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"],
       default: "Customer",
     },
-    restaurants:[{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Restaurant",
-    }],
-    kitchens:[{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Kitchen",
-    }],
+    restaurants: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Restaurant",
+      },
+    ],
+    kitchens: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Kitchen",
+      },
+    ],
 
     fcmToken: {
       type: String,
@@ -67,14 +71,13 @@ const User = new Schema(
       type: Boolean,
       default: false,
     },
-    isEmailVerified:{
-      type:Boolean,
+    isEmailVerified: {
+      type: Boolean,
       default: false,
     },
-    emailVerifyCode :{
-      type:Number
-    }
-
+    emailVerifyCode: {
+      type: Number,
+    },
   },
   { timestamps: true }
 );
