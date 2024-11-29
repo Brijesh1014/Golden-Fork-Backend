@@ -3,13 +3,13 @@ const adminController = require("./admin.controller");
 const auth = require("../middleware/auth.middleware");
 const router = express.Router();
 
-router.get("/getAllUsers",  auth(["SuperAdmin"]), adminController.getAllUsers);
+router.get("/getAllUsers",  auth(["SuperAdmin","RestaurantAdmin"]), adminController.getAllUsers);
 
-router.get("/getUserById/:id",  auth(["SuperAdmin"]), adminController.getById);
+router.get("/getUserById/:id",  auth(["SuperAdmin","RestaurantAdmin"]), adminController.getById);
 
-router.put("/updateUser/:id", auth(["SuperAdmin"]), adminController.updateById)
+router.put("/updateUser/:id", auth(["SuperAdmin","RestaurantAdmin"]), adminController.updateById)
 
-router.delete("/deleteUser/:id",auth(["SuperAdmin"]), adminController.deleteById)
+router.delete("/deleteUser/:id",auth(["SuperAdmin","RestaurantAdmin"]), adminController.deleteById)
 
 
 
