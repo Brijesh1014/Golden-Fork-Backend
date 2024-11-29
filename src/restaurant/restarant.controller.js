@@ -146,7 +146,7 @@ const getAllRestaurants = async (req, res) => {
     const remainingPages =
       totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
 
-    res.status(200).json({
+   return res.status(200).json({
       success: true,
       message: "Restaurants retrieved successfully",
       restaurants,

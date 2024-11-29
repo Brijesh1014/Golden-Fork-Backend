@@ -10,6 +10,10 @@ const authRoute = require("./src/auth/auth.route");
 const restaurantRoute = require("./src/restaurant/restaurant.route")
 const menuRoute = require("./src/menus/menu.route");
 const menuItemRoute= require("./src/menuItem/menuItem.route");
+const adminRoute = require("./src/admin/admin.route")
+const userRoute = require("./src/user/user.route")
+
+
 
 app.set("view engine", "ejs");
 const viewsDir = path.join(__dirname, "./src/views");
@@ -33,6 +37,9 @@ app.use("/api/auth", authRoute);
 app.use("/api/restaurant",restaurantRoute)
 app.use("/api/menu", menuRoute);
 app.use("/api/menuItem", menuItemRoute);
+app.use("/api/admin", adminRoute);
+app.use("/api/user", userRoute);
+
 
 app.listen(PORT, () => {
   console.log(`Server up and running on port ${PORT}!`);
