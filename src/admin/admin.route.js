@@ -11,6 +11,9 @@ router.put("/updateUser/:id", auth(["SuperAdmin","RestaurantAdmin"]), adminContr
 
 router.delete("/deleteUser/:id",auth(["SuperAdmin","RestaurantAdmin"]), adminController.deleteById)
 
+router.put("/confirmTableReservation/:id",auth(["SuperAdmin","RestaurantAdmin"]),adminController.confirmTableReservation)
+
+router.put("/cancelTableReservation/:id",auth(["SuperAdmin","RestaurantAdmin"]),adminController.cancelTableReservation)
 
 
 

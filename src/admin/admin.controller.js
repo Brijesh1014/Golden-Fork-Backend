@@ -1,5 +1,5 @@
 const User_Model = require("../user/user.model");
-
+const Reservation = require("../reservation/reservation.model")
 const getAllUsers = async (req, res) => {
   try {
     const { page = 1, limit = 10, role } = req.query;
@@ -110,9 +110,60 @@ const deleteById = async (req, res) => {
   }
 };
 
+const confirmTableReservation = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const reservation = await Reservation.findByIdAndUpdate(
+      id,
+      { status: "Confirmed" },
+      { new: true }
+    );
+
+    if (!reservation) {
+      return res.status(404).json({ error: "Reservation not found." });
+    }
+
+    res.status(200).json({
+      message: "Reservation confirmed successfully.",
+      reservation,
+    });
+  } catch (error) {
+    console.error("Error confirming reservation:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+const cancelTableReservation = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const reservation = await Reservation.findByIdAndUpdate(
+      id,
+      { status: "Cancelled" },
+      { new: true }
+    );
+
+    if (!reservation) {
+      return res.status(404).json({ error: "Reservation not found." });
+    }
+
+    res.status(200).json({
+      message: "Reservation cancelled successfully by admin.",
+      reservation,
+    });
+  } catch (error) {
+    console.error("Error cancelling reservation by admin:", error);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+
 module.exports = {
   getAllUsers,
   getById,
   updateById,
   deleteById, 
+  confirmTableReservation,
+  cancelTableReservation
 };

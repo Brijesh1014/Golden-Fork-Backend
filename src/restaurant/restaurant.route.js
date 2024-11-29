@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const restaurantController = require('./restarant.controller');
+const restaurantController = require('./restaurant.controller');
 const auth = require('../middleware/auth.middleware');
 
 router.post('/createRestaurant', auth(["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"]), restaurantController.createRestaurant);
