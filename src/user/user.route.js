@@ -4,9 +4,9 @@ const auth = require("../middleware/auth.middleware");
 const router = express.Router();
 
 
-router.get("/getUserById/:id",  auth(["Customer"]), userController.getById);
+router.get("/getUserById/:id",   auth(["Customer","KitchenStaff"]), userController.getById);
 
-router.put("/updateUser/:id", auth(["Customer"]), userController.updateById)
+router.put("/updateUser/:id",   auth(["Customer", "KitchenStaff"]), userController.updateById)
 
 
 
