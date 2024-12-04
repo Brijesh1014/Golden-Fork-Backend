@@ -10,10 +10,10 @@ const Reservation = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    tableId: {
+    tableId: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Table",
-    },
+    }],
     reservationDate: {
       type: Date,
     },
@@ -25,7 +25,7 @@ const Reservation = new Schema(
     },
     status: {
       type: String,
-      enum: ["Pending", "Confirmed", "Cancelled"],
+      enum: ["Pending", "Confirmed", "Cancelled","Completed"],
       default: "Pending",
     },
     createdBy: {

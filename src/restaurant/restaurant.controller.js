@@ -20,7 +20,8 @@ const createRestaurant = async (req, res) => {
       zipCode,
       address,
       status,
-      socialLinks
+      socialLinks,
+      bookingSlot
     } = req.body;
     const userId = req.userId;
 
@@ -29,7 +30,14 @@ const createRestaurant = async (req, res) => {
         .status(400)
         .json({ success: false, error: "Missing required fields" });
     }
-
+    const existingRestaurant = await Restaurant.findOne({ restaurantAdminId });
+    if (existingRestaurant) {
+      return res.status(400).json({
+        success: false,
+        message: `The restaurant admin is already assigned to another restaurant (${existingRestaurant.name}).`,
+      });
+    }
+    
     const newRestaurant = new Restaurant({
       name,
       location,
@@ -46,7 +54,8 @@ const createRestaurant = async (req, res) => {
       address,
       createdBy: userId,
       status,
-      socialLinks
+      socialLinks,
+      bookingSlot
     });
 
     if (newRestaurant) {
@@ -139,12 +148,25 @@ const getAllRestaurants = async (req, res) => {
         },
       })
       .populate("createdBy")
+      .populate("tables")
       .skip(skip)
       .limit(pageSize);
-
+      
+      const totalAvailableTables = restaurants.reduce((total, restaurant) => {
+        return (
+          total +
+          (restaurant.tables || []).filter((table) => table.isAvailable).length
+        );
+      }, 0);
+  
     const totalPages = Math.ceil(totalRestaurantCount / pageSize);
     const remainingPages =
       totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
+
+      const totalTableCount = restaurants.reduce((total, restaurant) => {
+        return total + (restaurant.tables ? restaurant.tables.length : 0);
+      }, 0);
+      
 
    return res.status(200).json({
       success: true,
@@ -156,6 +178,8 @@ const getAllRestaurants = async (req, res) => {
         totalPages,
         remainingPages,
         pageSize: restaurants.length,
+        totalAvailableTables,
+        totalTableCount
       },
     });
   } catch (error) {
@@ -168,24 +192,26 @@ const getAllRestaurants = async (req, res) => {
 const getRestaurantById = async (req, res) => {
   try {
     const restaurant = await Restaurant.findById(req.params.id)
-      .populate({
-        path: "menuId",
-        populate: {
-          path: "items",
-          model: "MenuItem",
-        },
-      })
-      .populate("createdBy");
+    .populate({
+      path: "menuId",
+      populate: {
+        path: "items",
+        model: "MenuItem",
+      },
+    })
+    .populate("createdBy");
     if (!restaurant) {
       return res
-        .status(404)
-        .json({ success: false, error: "Restaurant not found" });
+      .status(404)
+      .json({ success: false, error: "Restaurant not found" });
     }
+    const totalTableCount = restaurant.tables.length
     res
       .status(200)
       .json({
         success: true,
         message: "Restaurant retrieved successfully",
+        totalTableCount,
         restaurant,
       });
   } catch (error) {

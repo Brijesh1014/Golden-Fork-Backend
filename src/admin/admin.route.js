@@ -15,6 +15,14 @@ router.put("/confirmTableReservation/:id",auth(["SuperAdmin","RestaurantAdmin"])
 
 router.put("/cancelTableReservation/:id",auth(["SuperAdmin","RestaurantAdmin"]),adminController.cancelTableReservation)
 
+router.get("/searchOrders",auth(["SuperAdmin","RestaurantAdmin"]),adminController.searchOrders)
+
+router.get("/getDailyRevenue",auth(["SuperAdmin"]),adminController.getDailyRevenue)
+
+router.get("/getOrdersByStatus",auth(["SuperAdmin","RestaurantAdmin"]),adminController.getOrdersByStatus)
+
+router.put("/updateOrderStatus",auth(["SuperAdmin","RestaurantAdmin"]),adminController.updateOrderStatus)
+
 
 
 module.exports = router;

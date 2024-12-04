@@ -14,6 +14,9 @@ const adminRoute = require("./src/admin/admin.route")
 const userRoute = require("./src/user/user.route")
 const tableRoute = require("./src/table/table.route")
 const reservationRoute = require("./src/reservation/reservation.route")
+const orderRoute  =  require("./src/order/order.route")
+const cron = require("node-cron");
+const scheduleCronJobs = require("./src/services/scheduleCronJobs");
 
 app.set("view engine", "ejs");
 const viewsDir = path.join(__dirname, "./src/views");
@@ -33,6 +36,11 @@ app.get("/", async function (req, res) {
   );
 });
 
+cron.schedule('* * * * *', () => {
+  scheduleCronJobs();
+  console.log('Cron job is running every minute');
+});
+
 app.use("/api/auth", authRoute);
 app.use("/api/restaurant",restaurantRoute)
 app.use("/api/menu", menuRoute);
@@ -41,6 +49,7 @@ app.use("/api/admin", adminRoute);
 app.use("/api/user", userRoute);
 app.use("/api/table", tableRoute);
 app.use("/api/reservation", reservationRoute);
+app.use("/api/order", orderRoute);
 
 app.listen(PORT, () => {
   console.log(`Server up and running on port ${PORT}!`);

@@ -13,9 +13,18 @@ const Table = new Schema(
     capacity:{
         type:Number
     },
-    isAvailable :{
-        type:Boolean
+    availability: {
+      type: [
+        {
+          isAvailable: { type: Boolean, default: true },
+          date: { type: Date, default: null },
+          startTime: { type: String, default: null },
+          endTime: { type: String, default: null },
+        },
+      ],
+      default: [],
     },
+    isAvailable: { type: Boolean },
     createdBy:{
         type: mongoose.Schema.Types.ObjectId,
         ref:"User" 

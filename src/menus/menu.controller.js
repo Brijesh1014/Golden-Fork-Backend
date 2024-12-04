@@ -47,7 +47,8 @@ const getMenus = async (req, res) => {
       .populate("restaurantId items");
 
     const totalPages = Math.ceil(totalMenuCount / pageSize);
-    const remainingPages = totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
+    const remainingPages =
+      totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
 
     res.status(200).json({
       success: true,
@@ -66,7 +67,6 @@ const getMenus = async (req, res) => {
   }
 };
 
-
 const getMenuById = async (req, res) => {
   try {
     const menu = await Menu.findById(req.params.id).populate(
@@ -77,7 +77,7 @@ const getMenuById = async (req, res) => {
     }
     return res
       .status(200)
-      .json({ success: true, message: "Get all menus successful", menu });
+      .json({ success: true, message: "Get menu successful", menu });
   } catch (error) {
     res.status(500).json({ error: "Server error. Unable to fetch menu." });
   }
@@ -93,7 +93,10 @@ const updateMenu = async (req, res) => {
       return res.status(404).json({ success: false, error: "Menu not found." });
     }
 
-    if (updates.restaurantId && updates.restaurantId !== menu.restaurantId.toString()) {
+    if (
+      updates.restaurantId &&
+      updates.restaurantId !== menu.restaurantId.toString()
+    ) {
       await restaurant.findOneAndUpdate(
         { _id: menu.restaurantId },
         { $unset: { menuId: "" } }
@@ -104,7 +107,9 @@ const updateMenu = async (req, res) => {
       });
     }
 
-    const updatedMenu = await Menu.findByIdAndUpdate(id, updates, { new: true });
+    const updatedMenu = await Menu.findByIdAndUpdate(id, updates, {
+      new: true,
+    });
 
     res.status(200).json({
       success: true,
@@ -120,7 +125,6 @@ const updateMenu = async (req, res) => {
   }
 };
 
-
 const deleteMenu = async (req, res) => {
   try {
     const { id } = req.params;
@@ -134,7 +138,7 @@ const deleteMenu = async (req, res) => {
       { $unset: { menuId: "" } },
       { new: true }
     );
-    await menuItem.deleteMany(menu._id)
+    await menuItem.deleteMany(menu._id);
 
     return res
       .status(200)
@@ -146,11 +150,13 @@ const deleteMenu = async (req, res) => {
 
 const addCategoriesToMenu = async (req, res) => {
   try {
-    const { menuId } = req.params;  
-    const { categories } = req.body;  
+    const { menuId } = req.params;
+    const { categories } = req.body;
 
     if (!categories || !Array.isArray(categories)) {
-      return res.status(400).json({ success: false, error: "Categories should be an array." });
+      return res
+        .status(400)
+        .json({ success: false, error: "Categories should be an array." });
     }
 
     const menu = await Menu.findById(menuId);
@@ -158,10 +164,17 @@ const addCategoriesToMenu = async (req, res) => {
       return res.status(404).json({ success: false, error: "Menu not found." });
     }
 
-    const newCategories = categories.filter(category => !menu.categories.includes(category));
+    const newCategories = categories.filter(
+      (category) => !menu.categories.includes(category)
+    );
 
     if (newCategories.length === 0) {
-      return res.status(400).json({ success: false, error: "All categories already exist in the menu." });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: "All categories already exist in the menu.",
+        });
     }
 
     menu.categories.push(...newCategories);
@@ -181,15 +194,15 @@ const addCategoriesToMenu = async (req, res) => {
   }
 };
 
-
-
 const removeCategoriesFromMenu = async (req, res) => {
   try {
-    const { menuId } = req.params; 
-    const { categories } = req.body;  
+    const { menuId } = req.params;
+    const { categories } = req.body;
 
     if (!categories || !Array.isArray(categories)) {
-      return res.status(400).json({ success: false, error: "Categories should be an array." });
+      return res
+        .status(400)
+        .json({ success: false, error: "Categories should be an array." });
     }
 
     const menu = await Menu.findById(menuId);
@@ -197,13 +210,22 @@ const removeCategoriesFromMenu = async (req, res) => {
       return res.status(404).json({ success: false, error: "Menu not found." });
     }
 
-    const categoriesToRemove = categories.filter(category => menu.categories.includes(category));
+    const categoriesToRemove = categories.filter((category) =>
+      menu.categories.includes(category)
+    );
 
     if (categoriesToRemove.length === 0) {
-      return res.status(400).json({ success: false, error: "None of the categories are present in the menu." });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: "None of the categories are present in the menu.",
+        });
     }
 
-    menu.categories = menu.categories.filter(category => !categoriesToRemove.includes(category));
+    menu.categories = menu.categories.filter(
+      (category) => !categoriesToRemove.includes(category)
+    );
     await menu.save();
 
     return res.status(200).json({
@@ -220,7 +242,33 @@ const removeCategoriesFromMenu = async (req, res) => {
   }
 };
 
-
+const getMenuByRestaurantId = async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const menu = await Menu.find({ restaurantId: restaurantId }).populate(
+      "restaurantId items"
+    ).populate({
+      path: "restaurantId",
+      populate: {
+        path: "tables",
+        model: "Table",
+      },
+    })
+    if (!menu) {
+      return res.status(400).json({
+        success: false,
+        message: "Restaurant Menu not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Get menu successfully",
+      menu,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Server error. Unable to fetch menu." });
+  }
+};
 
 module.exports = {
   createMenu,
@@ -229,5 +277,6 @@ module.exports = {
   deleteMenu,
   getMenuById,
   addCategoriesToMenu,
-  removeCategoriesFromMenu
+  removeCategoriesFromMenu,
+  getMenuByRestaurantId,
 };

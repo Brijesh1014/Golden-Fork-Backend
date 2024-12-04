@@ -3,12 +3,20 @@ const Table_Model = require("./table.model");
 
 const createTable = async (req, res) => {
   try {
-    const { restaurantId, tableNumber, capacity, isAvailable } = req.body;
-let userId = req.userId
+    const { restaurantId, tableNumber, capacity,isAvailable } = req.body;
+    let userId = req.userId;
+
     if (!restaurantId || !tableNumber) {
-      return res
-        .status(400)
-        .json({ error: "Restaurant ID and tableNumber are required." });
+      return res.status(400).json({ error: "Restaurant ID and tableNumber are required." });
+    }
+
+    let existingTable = await Table_Model.findOne({ restaurantId, tableNumber });
+
+    if (existingTable) {
+      return res.status(400).json({
+        success: false,
+        message: `Table number ${tableNumber} already exists for this restaurant.`,
+      });
     }
 
     const table = new Table_Model({
@@ -19,30 +27,29 @@ let userId = req.userId
       createdBy: userId,
     });
 
-    if (table) {
-      const restaurant = await Restaurant_Model.findById(restaurantId);
-      if (!restaurant) {
-        return res.status(400).json({
-          success: false,
-          message: "Restaurant not found",
-        });
-      }
-      restaurant.tables.push(table._id);
-      await restaurant.save();
+    const restaurant = await Restaurant_Model.findById(restaurantId);
+    if (!restaurant) {
+      return res.status(400).json({
+        success: false,
+        message: "Restaurant not found",
+      });
     }
 
+    restaurant.tables.push(table._id);
+    await restaurant.save();
+
     await table.save();
+
     return res.status(201).json({
       success: true,
       message: "Table created successfully",
       restaurant: table,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+    res.status(500).json({ error: "Internal server error", details: error.message });
   }
 };
+
 
 const getAllTables = async (req, res) => {
   try {
@@ -52,9 +59,9 @@ const getAllTables = async (req, res) => {
     const skip = (pageNumber - 1) * pageSize;
     const totalTableCount = await Table_Model.countDocuments();
     const tables = await Table_Model.find()
-      .populate("createdBy")
-      .skip(skip)
-      .limit(pageSize);
+    .populate("createdBy restaurantId")
+    .skip(skip)
+    .limit(pageSize);
 
     const totalPages = Math.ceil(totalTableCount / pageSize);
     const remainingPages =
@@ -106,7 +113,7 @@ const getTableById = async (req, res) => {
   const updateTable = async (req, res) => {
     try {
       const { id } = req.params; 
-      const { restaurantId, tableNumber, capacity, isAvailable } = req.body;
+      const { restaurantId, tableNumber, capacity } = req.body;
   
       if (!id) {
         return res.status(400).json({ error: "Table ID is required." });
@@ -172,5 +179,6 @@ module.exports = {
     getAllTables,
     getTableById,
     updateTable,
-    deleteTable
+    deleteTable,
+
 }
