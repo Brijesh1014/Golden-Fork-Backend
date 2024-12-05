@@ -73,7 +73,7 @@ const updateMenuItem = async (req, res) => {
 
 const getMenuItems = async (req, res) => {
   try {
-    const { menuId, page = 1, limit = 10 } = req.query; 
+    const { menuId, page = 1, limit = 10 } = req.query;
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
     const skip = (pageNumber - 1) * pageSize;
@@ -85,7 +85,13 @@ const getMenuItems = async (req, res) => {
     const menuItems = await MenuItem.find(filter)
       .skip(skip)
       .limit(pageSize)
-      .populate("menuId");
+      .populate({
+        path: "menuId",
+        populate: {
+          path: "restaurantId", 
+          model: "Restaurant" 
+        }
+      });
 
     const totalPages = Math.ceil(totalMenuItemsCount / pageSize);
     const remainingPages = totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
