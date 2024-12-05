@@ -52,12 +52,22 @@ const createContactUs = async (req, res) => {
 };
 const getAllContactUs = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10,name,email,subject } = req.query;
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
     const skip = (pageNumber - 1) * pageSize;
+    let filter = {};
+    if(name){
+      filter.name = { $regex: name, $options: "i" };
+    }
+    if(email){
+      filter.email = { $regex: email, $options: "i" };
+    }
+    if(subject){
+      filter.subject = { $regex: subject, $options: "i" };
+    }
     const contactUs = await contactUsModel
-      .find()
+      .find(filter)
       .skip(skip)
       .limit(pageSize)
       .sort({ createdAt: -1 });
@@ -68,7 +78,7 @@ const getAllContactUs = async (req, res) => {
         contactUs,
       });
     }
-    const totalContactUs = await contactUsModel.countDocuments();
+    const totalContactUs = await contactUsModel.countDocuments(filter);
     const totalPages = Math.ceil(totalContactUs / pageSize);
     const remainingPages =
       totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
@@ -143,6 +153,12 @@ const sendReply = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Inquiry not found" });
+    }
+    if (inquiry.reply) {
+      return res.status(400).json({
+        success: false,
+        message: "A reply has already been sent for this inquiry",
+      });
     }
     const sendedReply = await sendReplyModel.create({
       sendReply,
