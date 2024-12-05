@@ -23,6 +23,7 @@ router.get("/getOrdersByStatus",auth(["SuperAdmin","RestaurantAdmin"]),adminCont
 
 router.put("/updateOrderStatus",auth(["SuperAdmin","RestaurantAdmin"]),adminController.updateOrderStatus)
 
+router.post("/createUser",auth(["SuperAdmin","RestaurantAdmin"]),adminController.createUser)
 
 
 module.exports = router;

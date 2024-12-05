@@ -10,43 +10,27 @@
 </head>
 
 <body style="height: 100vh; width: fit-content;">
-
-    <div class="form-container" style="
-    background: rgb(232, 232, 233); border: 1px solid rgb(135, 135, 135); border-radius: 30px; padding: 20px;">
-        <img src="https://res.cloudinary.com/dzfuuqo6g/image/upload/v1710417035/brainerhub_logo_dk6xdz.png"
-            style="height: 45px;">
-        <form id="sendReply" action="/sendReply" method="POST" style="
-            padding: 1rem 1rem;">
-            <p id="receiverName" for="password" style="
-            padding: 0.25rem 0.25rem; font-size: medium; font-size: medium;
-    margin: 0;">
+    <div style="max-width: 500px; margin: 30px auto; border: 5px solid #c29671; border-radius: 8px;">
+        <div style="padding: 10px; background-color: #000;">
+            <a style="max-width: 200px; display: block;" href="">
+                <img style="width: 100%;"
+                    src="https://res.cloudinary.com/dzfuuqo6g/image/upload/v1733392767/MainFrok_q4rvis.png">
+            </a>
+        </div>
+        <div style="padding: 25px;">
+            <!-- <h3 style="font-size: 26px; margin: 0 0 30px; text-align: center;">Welcome to Parth</h3> -->
+            <h4 style="font-size: 14px; line-height: 150%; color: #000; margin: 0 0 10px;">
                 Dear <%= name %>,
+            </h4>
+            <p style="font-weight: 500; font-size: 14px; line-height: 150%; margin: 0; color: #717070; margin-bottom: 15px;">
+                Thanks for Inquiry
             </p>
-
-            <p id="message" style="
-                text-align: start; font-size: medium;
-                padding: 1rem 0.25rem; 
-    margin: 0;">
+            <p style="font-weight: 500; font-size: 14px; line-height: 150%; margin: 0; color: #717070; margin-bottom: 15px;">
                 <%= messageContent %>
             </p>
-
-            <div style="
-            padding: 1rem 0.25rem;">
-                <p style="
-                text-align: start; font-size: medium;
-    margin: 0;">
-                    Thanks and Regards,
-                </p>
-                <p style="
-                text-align: start; font-size: medium;
-    margin: 0;">
-                    BrainerHub
-                </p>
-            </div>
-        </form>
+            
+        </div>
     </div>
-
-
 </body>
 
 </html>

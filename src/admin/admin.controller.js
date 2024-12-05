@@ -1,44 +1,56 @@
 const User_Model = require("../user/user.model");
-const Reservation = require("../reservation/reservation.model")
-const Order = require("../order/order.model")
+const Reservation = require("../reservation/reservation.model");
+const Order = require("../order/order.model");
+const bcrypt = require("bcrypt");
+const shareCredential = require("../services/shareCredential.service");
 const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, role, name, isEmailVerified ,status} = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      role,
+      name,
+      isEmailVerified,
+      status,
+    } = req.query;
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
     const skip = (pageNumber - 1) * pageSize;
 
     let filter = {};
     if (role) {
-      filter.role = { $regex: role, $options: "i" }; 
+      filter.role = { $regex: role, $options: "i" };
     }
-    
+
     if (name) {
-      const nameRegex = { $regex: name, $options: "i" }; 
-      filter.$or = [
-        { firstName: nameRegex },
-        { lastName: nameRegex },
-      ];
+      const nameRegex = { $regex: name, $options: "i" };
+      filter.$or = [{ firstName: nameRegex }, { lastName: nameRegex }];
     }
 
     if (isEmailVerified !== undefined) {
-      filter.isEmailVerified = isEmailVerified === 'true'; 
+      filter.isEmailVerified = isEmailVerified === "true";
     }
     if (status) {
-      console.log('status: ', status);
+      console.log("status: ", status);
       console.log("edsfdes");
-      
-      filter.status  = { $regex: status, $options: "i" };
+
+      filter.status = { $regex: status, $options: "i" };
     }
 
     const totalUsersCount = await User_Model.countDocuments(filter);
     const users = await User_Model.find(filter).skip(skip).limit(pageSize);
 
     const totalPages = Math.ceil(totalUsersCount / pageSize);
-    const remainingPages = totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
+    const remainingPages =
+      totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
 
-    const totalCustomers = await User_Model.countDocuments({ role: "Customer" });
-    const activeCustomers = await User_Model.countDocuments({ role: "Customer", status: "Activate" });
+    const totalCustomers = await User_Model.countDocuments({
+      role: "Customer",
+    });
+    const activeCustomers = await User_Model.countDocuments({
+      role: "Customer",
+      status: "Activate",
+    });
     const activeUsers = await User_Model.countDocuments({ status: "Activate" });
 
     return res.status(200).json({
@@ -57,11 +69,11 @@ const getAllUsers = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
   }
 };
-
-
 
 const getById = async (req, res) => {
   try {
@@ -89,11 +101,9 @@ const updateById = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    const updatedUser = await User_Model.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true } 
-    );
+    const updatedUser = await User_Model.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     if (!updatedUser) {
       return res.status(404).json({
@@ -203,7 +213,9 @@ const searchOrders = async (req, res) => {
 
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
@@ -229,26 +241,42 @@ const getDailyRevenue = async (req, res) => {
       },
     ]);
 
-    res.status(200).json({ success: true, data: revenue[0] || { totalRevenue: 0, totalOrders: 0 } });
+    res
+      .status(200)
+      .json({
+        success: true,
+        data: revenue[0] || { totalRevenue: 0, totalOrders: 0 },
+      });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
-
 
 const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ["Pending", "Confirmed", "Preparing", "Completed", "Cancelled"];
+    const validStatuses = [
+      "Pending",
+      "Confirmed",
+      "Preparing",
+      "Completed",
+      "Cancelled",
+    ];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, message: "Invalid status" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid status" });
     }
 
     const order = await Order.findById(id);
     if (!order || order.deleted) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
     order.status = status;
@@ -260,18 +288,27 @@ const updateOrderStatus = async (req, res) => {
       data: order,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
-
 const getOrdersByStatus = async (req, res) => {
   try {
-    const { status } = req.query; 
-    const validStatuses = ["Pending", "Confirmed", "Preparing", "Completed", "Cancelled"];
-    
+    const { status } = req.query;
+    const validStatuses = [
+      "Pending",
+      "Confirmed",
+      "Preparing",
+      "Completed",
+      "Cancelled",
+    ];
+
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, message: "Invalid status" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid status" });
     }
 
     const orders = await Order.find({ status, deleted: false })
@@ -281,22 +318,122 @@ const getOrdersByStatus = async (req, res) => {
 
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
+const generateRandomPassword = (length = 12) => {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  let password = "";
+  for (let i = 0; i < length; i++) {
+    password += characters.charAt(
+      Math.floor(Math.random() * characters.length)
+    );
+  }
+  return password;
+};
 
+const createUser = async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      username,
+      gender,
+      profileImage,
+      country,
+      state,
+      city,
+      zipCode,
+      deliveryAddress,
+      role,
+      restaurants,
+      kitchens,
+    } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required.",
+      });
+    }
+    const userId = req.userId
+
+    const existingUser = await User_Model.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already registered.",
+      });
+    }
+
+    const generatedPassword = generateRandomPassword();
+    const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+
+    const newUser = await User_Model.create({
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      username,
+      password: hashedPassword,
+      gender,
+      profileImage,
+      country,
+      state,
+      city,
+      zipCode,
+      deliveryAddress,
+      role,
+      restaurants,
+      kitchens,
+      createdBy:userId,
+      isEmailVerified: true, 
+    });
+
+    let name  = `${firstName} ${lastName}`
+
+    if (newUser) {
+      await shareCredential(
+        name,
+        email,                           
+        generatedPassword,               
+        email,                           
+        "Your Account Credentials",     
+        "../views/shareCredential.ejs"   
+      );
+    }
+    
+
+    return res.status(201).json({
+      success: true,
+      message: "User created successfully.",
+      data: newUser,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while creating the user.",
+    });
+  }
+};
 
 module.exports = {
   getAllUsers,
   getById,
   updateById,
-  deleteById, 
+  deleteById,
   confirmTableReservation,
   cancelTableReservation,
   getOrdersByStatus,
   updateOrderStatus,
   getDailyRevenue,
-  searchOrders
-
+  searchOrders,
+  createUser
 };

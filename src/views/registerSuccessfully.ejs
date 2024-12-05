@@ -6,29 +6,36 @@
     <meta name="x-apple-disable-message-reformatting">
     <title>Registration Successful</title>
 </head>
-<body style="font-family: Montserrat, sans-serif; background-color: #f4f7fc; color: #000; padding: 20px; min-height: 100vh;">
-    <div style="text-align: center; max-width: 600px; margin: auto; background-color: #fff; border-radius: 8px; padding: 30px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-        <h2 style="color: #333; font-size: 28px; font-weight: bold;">Registration Successful!</h2>
-        
-        <p style="font-size: 16px; color: #555;">Hello <strong><%= name %></strong>,</p>
-        
-        <p style="font-size: 16px; color: #555;">Congratulations! Your account has been successfully created.</p>
-        
-        <p style="font-size: 16px; color: #555;">Here are your account details:</p>
-        
-        <p style="font-size: 16px; color: #555;"><strong>Email:</strong> <%=email %></p>
+<body>
 
-        <p style="font-size: 16px; color: #555;">You can now log in and access all of our services.</p>
-
-        <p style="font-size: 16px; color: #555; margin-top: 20px;">
-            <a href="<%= loginUrl %>" style="background-color: #007bff; color: white; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; cursor: pointer;">
-                Log In Now
+    <div style="max-width: 500px; margin: 30px auto; border: 5px solid #c29671; border-radius: 8px;">
+        <div style="padding: 10px; background-color: #000;">
+            <a style="max-width: 200px; display: block;" href="">
+                <img style="width: 100%;"
+                    src="https://res.cloudinary.com/dzfuuqo6g/image/upload/v1733392767/MainFrok_q4rvis.png">
             </a>
-        </p>
-        
-        <p style="font-size: 14px; color: #777; margin-top: 30px;">
-            If you did not create this account, please contact support immediately.
-        </p>
+        </div>
+
+        <div style="padding: 25px; background-color: #fff;">
+            <h4 style="font-size: 20px; line-height: 150%; color: #000; margin: 0 0 10px; text-align: center;">
+                Registration Successful!
+            </h4>
+            <h3 style="font-size: 16px; line-height: 150%; color: #000; margin: 0 0 20px;">
+                Hello <span style="font-weight: 400;">Hello <%= name %></span>,
+            </h3>
+            <p style="margin: 0 0 20px;">Congratulations! Your account has been successfully created.</p>
+            <p style="margin: 0 0 20px;">Here are your account details:</p>
+            <p style="margin: 0 0 20px;"><strong>Email:</strong>
+                <%=email %>
+            </p>
+            <p style="margin: 0 0 20px;">You can now log in and access all of our services.</p>
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="" style="text-decoration: none; display: block; width: max-content; margin: auto; font-size: 14px; font-weight: 600; padding: 12px 25px; border: none; background: #c29671; color: #fff; border-radius: 5px; cursor: pointer;">
+                    Login your account
+                </a>
+            </div>
+            <p style="margin: 0 0 20px;">If you did not create this account, please contact support immediately.</p>
+        </div>
     </div>
 </body>
 </html>

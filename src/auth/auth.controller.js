@@ -12,7 +12,7 @@ const register = async (req, res) => {
   try {
     const {
       firstName,
-      lastName,
+      lastName ,
       email,
       phoneNumber,
       username,

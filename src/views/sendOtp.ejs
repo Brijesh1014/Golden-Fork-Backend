@@ -5,50 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP for Password Reset</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            color: #333;
-        }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #C29671;
-            border-radius: 5px;
-            background-color: #C29671;
-        }
-
-        .container p {
-            color: #000;
-            font-size: 16px;
-            line-height: 22px;
-        }
-
-        .header {
-            text-align: center;
-            color: #fff;
-            font-size: 24px;
-            margin-bottom: 50px;
-        }
-    </style>
 </head>
 
 <body>
-    <div class="container">
-        <h2 class="header">Your OTP for Password Reset</h2>
-        <p style="font-weight: 600;">Hello,</p>
-        <p>Your OTP for password reset is:</p>
-        <p
-            style="font-size: 18px; padding: 6px 13px; display: inline-block; border-radius: 6px; background-color: #fff;">
-            <strong>
+    <div style="max-width: 500px; margin: 30px auto; border: 5px solid #c29671; border-radius: 8px;">
+        <div style="padding: 10px; background-color: #000;">
+            <a style="max-width: 200px; display: block;" href="">
+                <img style="width: 100%;"
+                    src="https://res.cloudinary.com/dzfuuqo6g/image/upload/v1733392767/MainFrok_q4rvis.png">
+            </a>
+        </div>
+
+        <div style="padding: 25px; background-color: #fff;">
+            <h4 style="font-size: 14px; line-height: 150%; color: #000; margin: 0 0 10px;">
+                Your OTP for password reset is:
+            </h4>
+            <p style="font-weight: 700; font-size: 32px; line-height: 150%; margin: 20px 0; color: #000; margin: 0 0 20px;">
                 <%= otp %>
-            </strong>
-        </p>
-        <p>This OTP is valid for 10 minutes.</p>
-        <p>If you did not request a password reset, please ignore this email.</p>
-        <p style="margin-top: 20px;"><span style="font-weight: 600;">Best regards,</span><br>Your Application Team</p>
+            </p>
+            <p style="margin: 0 0 20px;">This OTP is valid for 10 minutes.</p>
+            <p style="margin: 0 0 20px;">If you did not request a password reset, please ignore this email.</p>
+            <p style="margin: 0 0 20px;">
+                <span style="font-weight: 600; margin-bottom: 4px; display: block;">Best regards,</span>
+                Your Application Team
+            </p>
+        </div>
     </div>
 </body>
 

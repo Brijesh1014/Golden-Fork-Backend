@@ -7,52 +7,50 @@
     <title>Contact Us</title>
 </head>
 
-<body style="height: 100vh; width: fit-content;">
-    <div class="form-container" style="
-    background: #c29671; border: 1px solid rgb(135, 135, 135); border-radius: 12px; padding: 50px 30px;">
-        <img src="https://res.cloudinary.com/dzfuuqo6g/image/upload/v1730192982/xwdyp25gkbm2u86se3_mwrhrx.png"
-            style="height: 25px; width: auto;">
-        <form style="padding-top: 30px;" id="sendReply" action="/sendReply" method="POST" style="
-            padding: 1rem 1rem;
-            gap: 0.5rem;">
-            <p id="receiverName" for="password" style="
-            padding: 0.25rem 0.25rem; color: #333; font-size: medium; font-size: medium;
-    margin: 0;">
-                <span style="font-weight: 600;">Name: </span>
-                <%= name %>
-            </p>
-            <p id="receiverName" for="password" style="
-            padding: 0.25rem 0.25rem; color: #333; font-size: medium; font-size: medium;
-    margin: 0;">
-                <span style="font-weight: 600;">Email: </span>
-                <%= email %>
-            </p>
-            <p id="receiverName" for="password" style="
-            padding: 0.25rem 0.25rem; color: #333; font-size: medium; font-size: medium;
-    margin: 0;">
-                <span style="font-weight: 600;">Contact No: </span>
-                <%= contactNo %>
-            </p>
-            <p id="receiverName" for="password" style="
-            padding: 0.25rem 0.25rem; color: #333; font-size: medium;
-
-    margin: 0;">
-                <span style="font-weight: 600;">Subject: </span>
-                <%= messageSubject %>
-            </p>
-
-            <p id="message" style="
-                text-align: start; font-size: medium;
-                padding: 1rem 0.25rem; color: #333;
-    margin: 0;">
-                <span style="font-weight: 600;">Message: </span>
-                <%= messageContent %>
-            </p>
-
-        </form>
+<body>
+    <div style="max-width: 500px; margin: 30px auto; border: 5px solid #c29671; border-radius: 8px;">
+        <div style="padding: 10px; background-color: #000;">
+            <a style="max-width: 200px; display: block;" href="">
+                <img style="width: 100%;"
+                    src="https://res.cloudinary.com/dzfuuqo6g/image/upload/v1733392767/MainFrok_q4rvis.png">
+            </a>
+        </div>
+        <div style="padding: 25px; background-color: #fff;">
+            <div style="text-align: center; margin: 30px 15px 15px; font-weight: 700; font-size: 18px;">
+                Received Inquiry
+            </div>
+            <table style="width: 100%;border: 1px dashed #ddd;border-collapse: collapse;">
+                <tr style="border: 1px dashed #ddd;">
+                    <td style="font-weight: 700; vertical-align: baseline; width: 30%; padding: 5px 12px;">
+                        Name:</td>
+                    <td style="font-weight: 400; width: 70%; padding: 5px 12px;  margin-bottom: 4px;"><%= name %></td>
+                </tr>
+                <tr style="border: 1px dashed #ddd;">
+                    <td style="font-weight: 700; vertical-align: baseline; width: 30%; padding: 5px 12px;">
+                        Email:</td>
+                    <td style="font-weight: 400; width: 70%; padding: 5px 12px;  margin-bottom: 4px;">
+                        <%= email %>
+                    </td>
+                </tr>
+                <tr style="border: 1px dashed #ddd;">
+                    <td style="font-weight: 700; vertical-align: baseline; width: 30%; padding: 5px 12px;">
+                        Contact No:</td>
+                    <td style="font-weight: 400; width: 70%; padding: 5px 12px;  margin-bottom: 4px;"><%= contactNo %></td>
+                </tr>
+                <tr style="border: 1px dashed #ddd;">
+                    <td style="font-weight: 700; vertical-align: baseline; width: 30%; padding: 5px 12px;">
+                        Subject:</td>
+                    <td style="font-weight: 400; width: 70%; padding: 5px 12px;  margin-bottom: 4px;"><%= messageSubject %></td>
+                </tr>
+                <tr style="border: 1px dashed #ddd;">
+                    <td style="font-weight: 700; vertical-align: baseline; width: 30%; padding: 5px 12px;">
+                        Message:</td>
+                    <td style="font-weight: 400; width: 70%; padding: 5px 12px;  margin-bottom: 4px;">A quick way to
+                        <%= messageContent %></td>
+                </tr>
+            </table>
+        </div>
     </div>
-
-
 </body>
 
 </html>
