@@ -208,7 +208,6 @@ const cancelReservation = async (req, res) => {
     res.status(500).json({ error: "Internal server error." });
   }
 };
-
 const getAvailableTableAndSlots = async (req, res) => {
   try {
     const { restaurantId, reservationDate, tableId } = req.query;
@@ -283,6 +282,7 @@ const getAvailableTableAndSlots = async (req, res) => {
         availableSlotsForTables.push({
           tableId: table._id,
           tableNumber: table.tableNumber,
+          tableCapacity: table.capacity,
           availableSlots: availableSlots.map((slot) => ({
             startTime: slot.start.toTimeString().slice(0, 5),
             endTime: slot.end.toTimeString().slice(0, 5),
@@ -291,7 +291,9 @@ const getAvailableTableAndSlots = async (req, res) => {
       }
     }
 
-    if (availableSlotsForTables.length === 0) {
+    const totalAvailableTableCount = availableSlotsForTables.length;
+
+    if (totalAvailableTableCount === 0) {
       return res.status(404).json({
         success: false,
         message: "No available slots for the given date.",
@@ -301,6 +303,7 @@ const getAvailableTableAndSlots = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Available slots fetched successfully.",
+      totalAvailableTableCount,
       availableSlots: availableSlotsForTables,
     });
   } catch (error) {

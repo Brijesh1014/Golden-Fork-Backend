@@ -73,6 +73,10 @@ const Restaurant = new Schema(
       enum: ["Open", "Closed", "Temporarily Closed", "Under Maintenance"],
       default: "Open",
     },
+    isActive:{
+      type:Boolean,
+      default: true,
+    },
     tables:[{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Table",

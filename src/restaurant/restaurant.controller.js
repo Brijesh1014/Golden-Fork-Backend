@@ -21,7 +21,8 @@ const createRestaurant = async (req, res) => {
       address,
       status,
       socialLinks,
-      bookingSlot
+      bookingSlot,
+      isActive
     } = req.body;
     const userId = req.userId;
 
@@ -55,7 +56,8 @@ const createRestaurant = async (req, res) => {
       createdBy: userId,
       status,
       socialLinks,
-      bookingSlot
+      bookingSlot,
+      isActive
     });
 
     if (newRestaurant) {
@@ -108,6 +110,7 @@ const getAllRestaurants = async (req, res) => {
       country,
       phoneNumber,
       restaurantAdminId,
+      status,
       openingHours,
     } = req.query;
 
@@ -127,10 +130,13 @@ const getAllRestaurants = async (req, res) => {
       filter.country = { $regex: country, $options: "i" };
     }
     if (phoneNumber) {
-      filter.phoneNumber = phoneNumber;
+      filter.phoneNumber ={ $regex: phoneNumber, $options: "i" };
     }
     if (restaurantAdminId) {
-      filter.restaurantAdminId = restaurantAdminId;
+      filter.restaurantAdminId = { $regex: restaurantAdminId, $options: "i" };
+    }
+    if (status) {
+      filter.status ={ $regex: status, $options: "i" };
     }
     if (openingHours) {
       const date = new Date(openingHours);
@@ -138,6 +144,7 @@ const getAllRestaurants = async (req, res) => {
     }
 
     const totalRestaurantCount = await Restaurant.countDocuments(filter);
+    const totalActiveRestaurantCount = await Restaurant.find({isActive:true}).countDocuments(filter)
     const restaurants = await Restaurant.find(filter)
       .populate("restaurantAdminId")
       .populate({
@@ -151,13 +158,6 @@ const getAllRestaurants = async (req, res) => {
       .populate("tables")
       .skip(skip)
       .limit(pageSize);
-      
-      const totalAvailableTables = restaurants.reduce((total, restaurant) => {
-        return (
-          total +
-          (restaurant.tables || []).filter((table) => table.isAvailable).length
-        );
-      }, 0);
   
     const totalPages = Math.ceil(totalRestaurantCount / pageSize);
     const remainingPages =
@@ -178,8 +178,8 @@ const getAllRestaurants = async (req, res) => {
         totalPages,
         remainingPages,
         pageSize: restaurants.length,
-        totalAvailableTables,
-        totalTableCount
+        totalTableCount,
+        totalActiveRestaurantCount
       },
     });
   } catch (error) {
