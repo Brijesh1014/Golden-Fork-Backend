@@ -3,10 +3,9 @@ const Schema = mongoose.Schema;
 
 const Category = new Schema(
   {
-    categoryName: 
-      {
-        type: String,
-      },
+    categoryName: {
+      type: String,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -17,6 +16,10 @@ const Category = new Schema(
         ref: "CategoryItem",
       },
     ],
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

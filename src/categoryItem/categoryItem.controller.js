@@ -48,8 +48,6 @@ const createCategoryItem = async (req, res) => {
     });
 
     if (categoryItem) {
-      console.log('categoryItem: ', categoryItem);
-      console.log('categoryId: ', categoryId);
       await Category.findByIdAndUpdate(categoryId, {
         $push: { items: categoryItem._id },
       });
@@ -120,6 +118,11 @@ const getCategoryItems = async (req, res) => {
       .limit(pageSize)
       .populate("categoryId restaurantId createdBy");
 
+      const totalAvailableItemsCount = await CategoryItem.find({isAvailable:true}).countDocuments();
+
+      const totalUnAvailableItemsCount = await CategoryItem.find({isAvailable:false}).countDocuments();
+
+
     const totalPages = Math.ceil(totalCategoryItemsCount / pageSize);
     const remainingPages = totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
 
@@ -133,6 +136,8 @@ const getCategoryItems = async (req, res) => {
         totalPages,
         remainingPages,
         pageSize: categoryItems.length,
+        totalAvailableItemsCount,
+        totalUnAvailableItemsCount
       },
     });
   } catch (error) {

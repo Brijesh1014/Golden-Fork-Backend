@@ -5,7 +5,7 @@ const Menu = require("./menu.model");
 
 const createMenu = async (req, res) => {
   try {
-    const { restaurantId, categories, menuName } = req.body;
+    const { restaurantId, categories, menuName,isActive } = req.body;
     const userId = req.userId;
 
     if (!restaurantId || !menuName) {
@@ -22,6 +22,7 @@ const createMenu = async (req, res) => {
       categories: categories || [],
       menuName,
       createdBy: userId,
+      isActive
     });
 
     if (menu) {
@@ -63,6 +64,8 @@ const getMenus = async (req, res) => {
           model: "CategoryItem",
         },
       })
+      const totalActiveMenuCount = await Menu.find({isActive:true}).countDocuments();
+      const totalDeActiveMenuCount = await Menu.find({isActive:false}).countDocuments();
 
     const totalPages = Math.ceil(totalMenuCount / pageSize);
     const remainingPages =
@@ -78,6 +81,8 @@ const getMenus = async (req, res) => {
         totalPages,
         remainingPages,
         pageSize: menus.length,
+        totalActiveMenuCount,
+        totalDeActiveMenuCount
       },
     });
   } catch (error) {

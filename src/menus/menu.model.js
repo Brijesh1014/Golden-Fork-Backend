@@ -14,11 +14,15 @@ const Menu = new Schema(
       },
     ],
     menuName: {
-      type: String
+      type: String,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }

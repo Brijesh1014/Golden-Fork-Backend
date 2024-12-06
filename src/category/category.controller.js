@@ -3,7 +3,7 @@ const categoryItem = require("../categoryItem/categoryItem.model");
 
 const createCategory = async (req, res) => {
     try {
-      const { categoryName } = req.body;
+      const { categoryName,isActive } = req.body;
       const userId = req.userId;
   
       if (!categoryName) {
@@ -21,6 +21,7 @@ const createCategory = async (req, res) => {
       const newCategory = new Category({
         categoryName,
         createdBy: userId,
+        isActive
       });
   
       await newCategory.save();
@@ -42,7 +43,8 @@ const createCategory = async (req, res) => {
       const totalCategoryCount = await Category.countDocuments();
       const categories = await Category.find().populate("createdBy", "name email").populate("items")  .skip(skip)
       .limit(pageSize);
-      
+      const totalActiveCategoriesCount = await Category.find({isActive:true}).countDocuments();
+      const totalDeActiveCategoriesCount = await Category.find({isActive:false}).countDocuments();
     const totalPages = Math.ceil(totalCategoryCount / pageSize);
     const remainingPages =
       totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
@@ -53,6 +55,8 @@ const createCategory = async (req, res) => {
           totalPages,
           remainingPages,
           pageSize: categories.length,
+          totalActiveCategoriesCount,
+          totalDeActiveCategoriesCount
         },
        });
     } catch (error) {
