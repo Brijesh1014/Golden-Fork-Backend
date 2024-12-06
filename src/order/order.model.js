@@ -16,7 +16,7 @@ const Order = new Schema(
       {
         itemId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "MenuItem",
+          ref: "CategoryItem",
         },
         quantity: {
           type: Number,

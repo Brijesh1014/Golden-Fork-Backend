@@ -1,0 +1,206 @@
+const Category = require("../category/category.model");
+const categoryItem = require("../categoryItem/categoryItem.model");
+
+const createCategory = async (req, res) => {
+    try {
+      const { categoryName } = req.body;
+      const userId = req.userId;
+  
+      if (!categoryName) {
+        return res.status(400).json({ error: "Category name is required." });
+      }
+
+      let categoryIsExits = await Category.findOne({categoryName})
+      if(categoryIsExits){
+        return res.status(400).json({
+          success:false,
+          message:"Category name is already exits"
+        })
+      }
+  
+      const newCategory = new Category({
+        categoryName,
+        createdBy: userId,
+      });
+  
+      await newCategory.save();
+      return res
+        .status(201)
+        .json({ success: true, message: "Category created successfully.", category: newCategory });
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(500).json({ error: "Server error. Unable to create category." });
+    }
+  };
+  
+  const getAllCategories = async (req, res) => {
+    try {
+      const { page = 1, limit = 10 } = req.query;
+      const pageNumber = parseInt(page);
+      const pageSize = parseInt(limit);
+      const skip = (pageNumber - 1) * pageSize;
+      const totalCategoryCount = await Category.countDocuments();
+      const categories = await Category.find().populate("createdBy", "name email").populate("items")  .skip(skip)
+      .limit(pageSize);
+      
+    const totalPages = Math.ceil(totalCategoryCount / pageSize);
+    const remainingPages =
+      totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
+      res.status(200).json({ success: true,message:"Fetch all categories successfully", categories,
+        meta: {
+          totalCategoryCount,
+          currentPage: pageNumber,
+          totalPages,
+          remainingPages,
+          pageSize: categories.length,
+        },
+       });
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ error: "Server error. Unable to fetch categories." });
+    }
+  };
+  
+  const getCategoryById = async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      const category = await Category.findById(id)
+        .populate("createdBy", "name email")
+        .populate("items");
+  
+      if (!category) {
+        return res.status(404).json({ error: "Category not found." });
+      }
+  
+      res.status(200).json({ success: true, category });
+    } catch (error) {
+      console.error("Error fetching category:", error);
+      res.status(500).json({ error: "Server error. Unable to fetch category." });
+    }
+  };
+  
+  const updateCategory = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { categoryName } = req.body;
+  
+      if (!categoryName) {
+        return res.status(400).json({ error: "Category name is required for update." });
+      }
+  
+      const updatedCategory = await Category.findByIdAndUpdate(
+        id,
+        { categoryName },
+        { new: true }
+      );
+  
+      if (!updatedCategory) {
+        return res.status(404).json({ error: "Category not found." });
+      }
+  
+      res.status(200).json({ success: true, message: "Category updated successfully.", category: updatedCategory });
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({ error: "Server error. Unable to update category." });
+    }
+  };
+  
+  const deleteCategory = async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      const deletedCategory = await Category.findById(id);
+  
+      if (!deletedCategory) {
+        return res.status(404).json({ error: "Category not found." });
+      }
+
+      await Category.deleteOne(deletedCategory._id)
+      await categoryItem.deleteMany({categoryId:deletedCategory._id})
+  
+      res.status(200).json({ success: true, message: "Category deleted successfully.", category: deletedCategory });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ error: "Server error. Unable to delete category." });
+    }
+  };
+
+  
+  const addMultipleCategoryItems = async (req, res) => {
+    try {
+      const { categoryId, itemIds } = req.body;
+      
+      if (!Array.isArray(itemIds) || itemIds.length === 0) {
+        return res.status(400).json({ error: "itemIds must be a non-empty array." });
+      }
+  
+      const category = await Category.findById(categoryId);
+      if (!category) {
+        return res.status(404).json({ error: "Category not found." });
+      }
+
+      const categoryItems = await categoryItem.find({ '_id': { $in: itemIds } });
+      if (categoryItems.length !== itemIds.length) {
+        return res.status(404).json({ error: "One or more CategoryItems not found." });
+      }
+
+      category.items.push(...itemIds);
+      await category.save();
+  
+      res.status(200).json({
+        success: true,
+        message: "CategoryItems added to Category successfully.",
+        category,
+      });
+    } catch (error) {
+      console.error("Error adding category items:", error);
+      res.status(500).json({ error: "Server error. Unable to add category items." });
+    }
+  };
+
+  const removeMultipleCategoryItems = async (req, res) => {
+    try {
+      const { categoryId, itemIds } = req.body; 
+      
+      if (!Array.isArray(itemIds) || itemIds.length === 0) {
+        return res.status(400).json({ error: "itemIds must be a non-empty array." });
+      }
+  
+      const category = await Category.findById(categoryId);
+      if (!category) {
+        return res.status(404).json({ error: "Category not found." });
+      }
+  
+      const itemsNotInCategory = itemIds.filter(itemId => !category.items.includes(itemId));
+      if (itemsNotInCategory.length > 0) {
+        return res.status(404).json({ error: `Items not found in category: ${itemsNotInCategory.join(', ')}` });
+      }
+  
+      category.items = category.items.filter(itemId => !itemIds.includes(itemId));
+      await category.save();
+  
+      res.status(200).json({
+        success: true,
+        message: "CategoryItems removed from Category successfully.",
+        category,
+      });
+    } catch (error) {
+      console.error("Error removing category items:", error);
+      res.status(500).json({ error: "Server error. Unable to remove category items." });
+    }
+  };
+  
+  
+  
+
+
+  module.exports = {
+    createCategory,
+    getAllCategories,
+    getCategoryById,
+    updateCategory,
+    deleteCategory,
+    addMultipleCategoryItems,
+    removeMultipleCategoryItems
+  }

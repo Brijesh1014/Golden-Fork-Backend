@@ -1,4 +1,4 @@
-const menuItem = require("../menuItem/menuItem.model");
+const categoryItem = require("../categoryItem/categoryItem.model");
 const menu = require("../menus/menu.model");
 const User_Model = require("../user/user.model");
 const Restaurant = require("./restaurant.model");
@@ -145,19 +145,25 @@ const getAllRestaurants = async (req, res) => {
 
     const totalRestaurantCount = await Restaurant.countDocuments(filter);
     const totalActiveRestaurantCount = await Restaurant.find({isActive:true}).countDocuments(filter)
+
     const restaurants = await Restaurant.find(filter)
-      .populate("restaurantAdminId")
-      .populate({
-        path: "menuId",
+    .populate("restaurantAdminId")
+    .populate({
+      path: "menuId",
+      populate: {
+        path: "categories",
+        model: "Category",
         populate: {
           path: "items",
-          model: "MenuItem",
+          model: "CategoryItem",
         },
-      })
-      .populate("createdBy")
-      .populate("tables")
-      .skip(skip)
-      .limit(pageSize);
+      },
+    })
+    .populate("createdBy")
+    .populate("tables")
+    .skip(skip)
+    .limit(pageSize);
+  
   
     const totalPages = Math.ceil(totalRestaurantCount / pageSize);
     const remainingPages =
@@ -195,11 +201,16 @@ const getRestaurantById = async (req, res) => {
     .populate({
       path: "menuId",
       populate: {
-        path: "items",
-        model: "MenuItem",
+        path: "categories",
+        model: "Category",
+        populate: {
+          path: "items",
+          model: "CategoryItem",
+        },
       },
     })
-    .populate("createdBy");
+    .populate("createdBy")
+    .populate("tables");
     if (!restaurant) {
       return res
       .status(404)
@@ -283,9 +294,8 @@ const deleteRestaurantById = async (req, res) => {
       return res.status(400).json({ success: false, message: "User not found" });
     }
 
-   let menuId= await menu.findOneAndDelete({ restaurantId: restaurantId });
+     await menu.findOneAndDelete({ restaurantId: restaurantId });
 
-    await menuItem.deleteMany({menuId});
     res.status(200).json({ success: true, message: "Restaurant and associated data deleted successfully" });
 
   } catch (error) {

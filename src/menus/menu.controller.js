@@ -1,24 +1,29 @@
-const menuItem = require("../menuItem/menuItem.model");
+const category = require("../category/category.model");
+const categoryItem = require("../categoryItem/categoryItem.model");
 const restaurant = require("../restaurant/restaurant.model");
 const Menu = require("./menu.model");
 
 const createMenu = async (req, res) => {
   try {
-    const { restaurantId, categories, items } = req.body;
+    const { restaurantId, categories, menuName } = req.body;
     const userId = req.userId;
 
-    if (!restaurantId || !categories) {
+    if (!restaurantId || !menuName) {
       return res
         .status(400)
-        .json({ error: "Restaurant ID and categories are required." });
+        .json({
+          success: false,
+          error: "Restaurant ID and menu name are required.",
+        });
     }
 
     const menu = new Menu({
       restaurantId,
-      categories,
+      categories: categories || [],
+      menuName,
       createdBy: userId,
-      items,
     });
+
     if (menu) {
       await restaurant.findByIdAndUpdate(restaurantId, { menuId: menu._id });
     }
@@ -28,7 +33,13 @@ const createMenu = async (req, res) => {
       .status(201)
       .json({ success: true, message: "Menu created successfully.", menu });
   } catch (error) {
-    res.status(500).json({ error: "Server error. Unable to create menu." });
+    res
+      .status(500)
+      .json({
+        success: false,
+        error: "Server error. Unable to create menu.",
+        details: error.message,
+      });
   }
 };
 
@@ -44,7 +55,14 @@ const getMenus = async (req, res) => {
     const menus = await Menu.find()
       .skip(skip)
       .limit(pageSize)
-      .populate("restaurantId items");
+      .populate("restaurantId")
+      .populate({
+        path: "categories",
+        populate: {
+          path: "items",
+          model: "CategoryItem",
+        },
+      })
 
     const totalPages = Math.ceil(totalMenuCount / pageSize);
     const remainingPages =
@@ -70,8 +88,14 @@ const getMenus = async (req, res) => {
 const getMenuById = async (req, res) => {
   try {
     const menu = await Menu.findById(req.params.id).populate(
-      "restaurantId items"
-    );
+      "restaurantId"
+    )      .populate({
+      path: "categories",
+      populate: {
+        path: "items",
+        model: "CategoryItem",
+      },
+    });
     if (!menu) {
       return res.status(404).json({ success: false, error: "Menu not found." });
     }
@@ -138,7 +162,6 @@ const deleteMenu = async (req, res) => {
       { $unset: { menuId: "" } },
       { new: true }
     );
-    await menuItem.deleteMany(menu._id);
 
     return res
       .status(200)
@@ -158,10 +181,17 @@ const addCategoriesToMenu = async (req, res) => {
         .status(400)
         .json({ success: false, error: "Categories should be an array." });
     }
-
     const menu = await Menu.findById(menuId);
     if (!menu) {
       return res.status(404).json({ success: false, error: "Menu not found." });
+    }
+
+    const validCategories = await category.find({ '_id': { $in: categories } });
+    if (validCategories.length !== categories.length) {
+      return res.status(404).json({
+        success: false,
+        error: "One or more categories do not exist.",
+      });
     }
 
     const newCategories = categories.filter(
@@ -194,6 +224,7 @@ const addCategoriesToMenu = async (req, res) => {
   }
 };
 
+
 const removeCategoriesFromMenu = async (req, res) => {
   try {
     const { menuId } = req.params;
@@ -223,6 +254,14 @@ const removeCategoriesFromMenu = async (req, res) => {
         });
     }
 
+    const validCategories = await category.find({ '_id': { $in: categoriesToRemove } });
+    if (validCategories.length !== categoriesToRemove.length) {
+      return res.status(404).json({
+        success: false,
+        error: "One or more categories do not exist in the database.",
+      });
+    }
+
     menu.categories = menu.categories.filter(
       (category) => !categoriesToRemove.includes(category)
     );
@@ -242,31 +281,38 @@ const removeCategoriesFromMenu = async (req, res) => {
   }
 };
 
+
 const getMenuByRestaurantId = async (req, res) => {
   try {
     const { restaurantId } = req.params;
-    const menu = await Menu.find({ restaurantId: restaurantId }).populate(
-      "restaurantId items"
-    ).populate({
-      path: "restaurantId",
-      populate: {
-        path: "tables",
-        model: "Table",
-      },
-    })
-    if (!menu) {
-      return res.status(400).json({
-        success: false,
-        message: "Restaurant Menu not found",
+    const menu = await Menu.find({ restaurantId })
+      .populate("categories")
+      .populate("restaurantId")
+      .populate({
+        path: "categories",
+        populate: { path: "items", model: "CategoryItem" },
       });
+
+    if (!menu || menu.length === 0) {
+      return res
+        .status(404)
+        .json({
+          success: false,
+          error: "Menu not found for the specified restaurant.",
+        });
     }
-    return res.status(200).json({
-      success: true,
-      message: "Get menu successfully",
-      menu,
-    });
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Menu fetched successfully.", menu });
   } catch (error) {
-    res.status(500).json({ error: "Server error. Unable to fetch menu." });
+    res
+      .status(500)
+      .json({
+        success: false,
+        error: "Server error. Unable to fetch menu.",
+        details: error.message,
+      });
   }
 };
 

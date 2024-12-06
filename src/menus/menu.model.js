@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+
 const Menu = new Schema(
   {
     restaurantId: {
@@ -8,15 +9,13 @@ const Menu = new Schema(
     },
     categories: [
       {
-        type: String,
-      },
-    ],
-    items: [
-      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "MenuItem",
+        ref: "Category",
       },
     ],
+    menuName: {
+      type: String
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
