@@ -25,5 +25,9 @@ router.put("/updateOrderStatus",auth(["SuperAdmin","RestaurantAdmin"]),adminCont
 
 router.post("/createUser",auth(["SuperAdmin","RestaurantAdmin"]),adminController.createUser)
 
+router.get("/getAvailableTableAndSlotsForAllRestaurants",auth(["SuperAdmin","RestaurantAdmin"]),adminController.getAvailableTableAndSlotsForAllRestaurants)
+
+router.get("/getAvailableTableAndSlots",auth([ "RestaurantAdmin", "SuperAdmin"]),adminController.getAvailableTableAndSlots);
+
 
 module.exports = router;

@@ -1,4 +1,3 @@
-const categoryItem = require("../categoryItem/categoryItem.model");
 const menu = require("../menus/menu.model");
 const User_Model = require("../user/user.model");
 const Restaurant = require("./restaurant.model");

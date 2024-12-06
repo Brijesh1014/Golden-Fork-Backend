@@ -3,7 +3,6 @@ const router = express.Router();
 const {
   createReservation,
   getAllReservations,
-  getAvailableTableAndSlots,
   deleteReservation,
   cancelReservation,
   getAvailableTable,
@@ -15,8 +14,6 @@ const auth = require("../middleware/auth.middleware");
 router.post("/createReservation",auth(["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"]), createReservation);
 
 router.get("/getAllReservations",auth(["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"]), getAllReservations);
-
-router.get("/getAvailableTableAndSlots",auth([ "RestaurantAdmin", "SuperAdmin"]), getAvailableTableAndSlots);
 
 router.delete("/deleteReservation/:id",auth(["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"]), deleteReservation);
 

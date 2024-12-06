@@ -52,32 +52,45 @@ const createContactUs = async (req, res) => {
 };
 const getAllContactUs = async (req, res) => {
   try {
-    const { page = 1, limit = 10,name,email,subject } = req.query;
+    const { page = 1, limit = 10, name, email, subject } = req.query;
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
     const skip = (pageNumber - 1) * pageSize;
     let filter = {};
-    if(name){
+
+    if (name) {
       filter.name = { $regex: name, $options: "i" };
     }
-    if(email){
+    if (email) {
       filter.email = { $regex: email, $options: "i" };
     }
-    if(subject){
+    if (subject) {
       filter.subject = { $regex: subject, $options: "i" };
     }
+
     const contactUs = await contactUsModel
       .find(filter)
       .skip(skip)
       .limit(pageSize)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .populate('reply');
     if (!contactUs) {
-      res.status(400).json({
-        success: true,
+      return res.status(400).json({
+        success: false,
         message: "Something went wrong",
-        contactUs,
       });
     }
+
+    const totalReplied = await contactUsModel.countDocuments({
+      ...filter,
+      reply: { $ne: null },  
+    });
+
+    const totalPending = await contactUsModel.countDocuments({
+      ...filter,
+      reply: { $eq: null }, 
+    });
+
     const totalContactUs = await contactUsModel.countDocuments(filter);
     const totalPages = Math.ceil(totalContactUs / pageSize);
     const remainingPages =
@@ -89,6 +102,8 @@ const getAllContactUs = async (req, res) => {
       contactUs,
       meta: {
         totalContactUs,
+        totalReplied,
+        totalPending,
         currentPage: pageNumber,
         totalPages,
         remainingPages,
@@ -99,6 +114,7 @@ const getAllContactUs = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 const getContactUsById = async (req, res) => {
   try {
     const { id } = req.params;

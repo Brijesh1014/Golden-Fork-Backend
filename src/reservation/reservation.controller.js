@@ -208,109 +208,6 @@ const cancelReservation = async (req, res) => {
     res.status(500).json({ error: "Internal server error." });
   }
 };
-const getAvailableTableAndSlots = async (req, res) => {
-  try {
-    const { restaurantId, reservationDate, tableId } = req.query;
-
-    if (!restaurantId || !reservationDate) {
-      return res
-        .status(400)
-        .json({ error: "restaurantId and reservationDate are required." });
-    }
-
-    const date = new Date(reservationDate);
-    const startBusinessHour = "08:00";
-    const endBusinessHour = "22:00";
-
-    const generateTimeSlots = (start, end) => {
-      const slots = [];
-      let current = start;
-      while (current < end) {
-        const next = new Date(current.getTime() + 90 * 60000);
-        if (next <= end) {
-          slots.push({ start: current, end: next });
-        }
-        current = new Date(current.getTime() + 15 * 60000);
-      }
-      return slots;
-    };
-
-    const slots = generateTimeSlots(
-      new Date(`${reservationDate}T${startBusinessHour}`),
-      new Date(`${reservationDate}T${endBusinessHour}`)
-    );
-
-    const query = {
-      restaurantId,
-      reservationDate: date,
-      status: { $in: ["Pending", "Confirmed"] },
-    };
-    if (tableId) {
-      query.tableId = tableId;
-    }
-
-    const reservations = await Reservation.find(query);
-
-    const tables = await Table.find({ restaurantId });
-
-    const availableSlotsForTables = [];
-
-    for (const table of tables) {
-      const unavailableSlotsFromAvailability = table.availability.filter(
-        (slot) =>
-          new Date(slot.date).toISOString().slice(0, 10) ===
-            date.toISOString().slice(0, 10) && !slot.isAvailable
-      );
-
-      const unavailableSlots = [
-        ...unavailableSlotsFromAvailability,
-        ...reservations
-          .filter((res) => res.tableId.includes(table._id))
-          .map((res) => ({
-            start: new Date(`${reservationDate}T${res.startTime}`),
-            end: new Date(`${reservationDate}T${res.endTime}`),
-          })),
-      ];
-
-      const availableSlots = slots.filter((slot) => {
-        return !unavailableSlots.some(
-          (unSlot) => slot.start < unSlot.end && slot.end > unSlot.start
-        );
-      });
-
-      if (availableSlots.length > 0) {
-        availableSlotsForTables.push({
-          tableId: table._id,
-          tableNumber: table.tableNumber,
-          tableCapacity: table.capacity,
-          availableSlots: availableSlots.map((slot) => ({
-            startTime: slot.start.toTimeString().slice(0, 5),
-            endTime: slot.end.toTimeString().slice(0, 5),
-          })),
-        });
-      }
-    }
-
-    const totalAvailableTableCount = availableSlotsForTables.length;
-
-    if (totalAvailableTableCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No available slots for the given date.",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Available slots fetched successfully.",
-      totalAvailableTableCount,
-      availableSlots: availableSlotsForTables,
-    });
-  } catch (error) {
-    console.error("Error fetching available slots:", error);
-    res.status(500).json({ error: "Internal server error." });
-  }
-};
 
 const getAvailableTable = async (req, res) => {
   try {
@@ -509,7 +406,6 @@ module.exports = {
   createReservation,
   getAllReservations,
   deleteReservation,
-  getAvailableTableAndSlots,
   getAvailableSlots,
   cancelReservation,
   getAvailableTable,
