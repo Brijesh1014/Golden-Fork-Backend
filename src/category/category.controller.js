@@ -21,7 +21,7 @@ const createCategory = async (req, res) => {
       const newCategory = new Category({
         categoryName,
         createdBy: userId,
-        isActive
+        isActive:isActive || true
       });
   
       await newCategory.save();

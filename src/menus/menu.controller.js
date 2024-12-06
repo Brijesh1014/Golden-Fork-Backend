@@ -22,7 +22,7 @@ const createMenu = async (req, res) => {
       categories: categories || [],
       menuName,
       createdBy: userId,
-      isActive
+      isActive : isActive || true
     });
 
     if (menu) {
