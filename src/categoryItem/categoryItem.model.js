@@ -41,6 +41,9 @@ const CategoryItem = new Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
+    isFixed: {
+      type: Boolean,
+    },
   },
   { timestamps: true }
 );

@@ -23,6 +23,9 @@ const Menu = new Schema(
     isActive: {
       type: Boolean,
     },
+    isFixed: {
+      type: Boolean,
+    },
   },
   { timestamps: true }
 );
