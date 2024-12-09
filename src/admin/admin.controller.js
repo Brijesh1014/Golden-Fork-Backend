@@ -26,16 +26,36 @@ const getAllUsers = async (req, res) => {
 
     if (name) {
       const nameRegex = { $regex: name, $options: "i" };
-      filter.$or = [{ firstName: nameRegex }, { lastName: nameRegex }];
+    
+      const nameParts = name.split(" ");
+    
+      const conditions = [];
+      if (nameParts.length > 1) {
+        conditions.push(
+          {
+            firstName: { $regex: nameParts[0], $options: "i" },
+            lastName: { $regex: nameParts[1], $options: "i" },
+          },
+          {
+            firstName: { $regex: nameParts[1], $options: "i" },
+            lastName: { $regex: nameParts[0], $options: "i" },
+          }
+        );
+      }
+    
+      conditions.push(
+        { firstName: nameRegex },
+        { lastName: nameRegex }
+      );
+    
+      filter.$or = conditions;
     }
+    
 
     if (isEmailVerified !== undefined) {
       filter.isEmailVerified = isEmailVerified === "true";
     }
     if (status) {
-      console.log("status: ", status);
-      console.log("edsfdes");
-
       filter.status = { $regex: status, $options: "i" };
     }
 
