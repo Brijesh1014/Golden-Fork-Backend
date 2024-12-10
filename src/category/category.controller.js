@@ -42,25 +42,38 @@ const createCategory = async (req, res) => {
       const pageNumber = parseInt(page);
       const pageSize = parseInt(limit);
       const skip = (pageNumber - 1) * pageSize;
+
       const totalCategoryCount = await Category.countDocuments();
-      const categories = await Category.find().populate("createdBy", "name email").populate("items")  .skip(skip)
-      .limit(pageSize);
-      const totalActiveCategoriesCount = await Category.find({isActive:true}).countDocuments();
-      const totalDeActiveCategoriesCount = await Category.find({isActive:false}).countDocuments();
-    const totalPages = Math.ceil(totalCategoryCount / pageSize);
-    const remainingPages =
-      totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
-      res.status(200).json({ success: true,message:"Fetch all categories successfully", categories,
+      const totalActiveCategoriesCount = await Category.find({ isActive: true }).countDocuments();
+      const totalDeActiveCategoriesCount = await Category.find({ isActive: false }).countDocuments();
+  
+      const categories = await Category.find()
+        .populate("createdBy", "name email")
+        .populate("items")
+        .skip(skip)
+        .limit(pageSize);
+      const categoriesWithItemCount = categories.map(category => ({
+        ...category.toObject(),
+        totalItemCount: category.items ? category.items.length : 0,
+      }));
+  
+      const totalPages = Math.ceil(totalCategoryCount / pageSize);
+      const remainingPages = totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
+  
+      res.status(200).json({
+        success: true,
+        message: "Fetch all categories successfully",
+        categories: categoriesWithItemCount,
         meta: {
           totalCategoryCount,
           currentPage: pageNumber,
           totalPages,
           remainingPages,
-          pageSize: categories.length,
+          pageSize: categoriesWithItemCount.length,
           totalActiveCategoriesCount,
-          totalDeActiveCategoriesCount
+          totalDeActiveCategoriesCount,
         },
-       });
+      });
     } catch (error) {
       console.error("Error fetching categories:", error);
       res.status(500).json({ error: "Server error. Unable to fetch categories." });
