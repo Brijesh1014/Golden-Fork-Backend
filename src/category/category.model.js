@@ -19,6 +19,12 @@ const Category = new Schema(
     isActive: {
       type: Boolean,
     },
+    description:{
+      type:String
+    },
+    mainImage:{
+      type:String
+    }
   },
   { timestamps: true }
 );

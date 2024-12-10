@@ -3,7 +3,7 @@ const categoryItem = require("../categoryItem/categoryItem.model");
 
 const createCategory = async (req, res) => {
     try {
-      const { categoryName,isActive } = req.body;
+      const { categoryName,isActive,description,mainImage } = req.body;
       const userId = req.userId;
   
       if (!categoryName) {
@@ -21,7 +21,9 @@ const createCategory = async (req, res) => {
       const newCategory = new Category({
         categoryName,
         createdBy: userId,
-        isActive:isActive || true
+        isActive:isActive || true,
+        description,
+        mainImage
       });
   
       await newCategory.save();
@@ -87,7 +89,7 @@ const createCategory = async (req, res) => {
   const updateCategory = async (req, res) => {
     try {
       const { id } = req.params;
-      const { categoryName } = req.body;
+      const { categoryName,description } = req.body;
   
       if (!categoryName) {
         return res.status(400).json({ error: "Category name is required for update." });
