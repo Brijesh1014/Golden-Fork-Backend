@@ -21,6 +21,9 @@ const Restaurant = new Schema(
     openingHours: {
       type: String,
     },
+    closingHours: {
+      type: String,
+    },
     restaurantAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

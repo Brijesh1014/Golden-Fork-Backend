@@ -21,7 +21,8 @@ const createRestaurant = async (req, res) => {
       status,
       socialLinks,
       bookingSlot,
-      isActive
+      isActive,
+      closingHours
     } = req.body;
     const userId = req.userId;
 
@@ -56,7 +57,8 @@ const createRestaurant = async (req, res) => {
       status,
       socialLinks,
       bookingSlot,
-      isActive
+      isActive,
+      closingHours
     });
 
     if (newRestaurant) {
