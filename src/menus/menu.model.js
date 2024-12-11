@@ -7,6 +7,10 @@ const Menu = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Restaurant",
     },
+    kitchenId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Kitchen",
+    },
     categories: [
       {
         type: mongoose.Schema.Types.ObjectId,

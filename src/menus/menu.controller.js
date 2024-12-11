@@ -1,11 +1,13 @@
 const category = require("../category/category.model");
 const categoryItem = require("../categoryItem/categoryItem.model");
+const kitchenModel = require("../kitchen/kitchen.model");
 const restaurant = require("../restaurant/restaurant.model");
 const Menu = require("./menu.model");
 
 const createMenu = async (req, res) => {
   try {
-    const { restaurantId, categories, menuName, isActive } = req.body;
+    const { restaurantId, categories, menuName, isActive, kitchenId } =
+      req.body;
     const userId = req.userId;
 
     if (!restaurantId || !menuName) {
@@ -15,22 +17,43 @@ const createMenu = async (req, res) => {
       });
     }
 
+    const restaurantExists = await restaurant.findById(restaurantId);
+    if (!restaurantExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found.",
+      });
+    }
+
+    const kitchenExists = await kitchenModel.findById(kitchenId);
+    if (!kitchenExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Kitchen not found.",
+      });
+    }
+
     const menu = new Menu({
       restaurantId,
       categories: categories || [],
       menuName,
       createdBy: userId,
       isActive: isActive || true,
+      kitchenId,
     });
 
     if (menu) {
       await restaurant.findByIdAndUpdate(restaurantId, { menuId: menu._id });
+      await kitchenModel.findByIdAndUpdate(kitchenId, { menuId: menu._id });
     }
 
     await menu.save();
-    return res
-      .status(201)
-      .json({ success: true, message: "Menu created successfully.", menu });
+
+    return res.status(201).json({
+      success: true,
+      message: "Menu created successfully.",
+      menu,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -55,6 +78,7 @@ const getMenus = async (req, res) => {
 
     const allMenus = await Menu.find()
       .populate("restaurantId")
+      .populate("kitchenId")
       .populate({
         path: "categories",
         populate: {
@@ -78,15 +102,21 @@ const getMenus = async (req, res) => {
     }
     if (isActive !== undefined) {
       const activeFlag = isActive === "true";
-      filteredMenus = filteredMenus.filter((menu) => menu.isActive === activeFlag);
+      filteredMenus = filteredMenus.filter(
+        (menu) => menu.isActive === activeFlag
+      );
     }
 
     const paginatedMenus = filteredMenus.slice(skip, skip + pageSize);
 
     const totalMenuCount = filteredMenus.length;
     const totalPages = Math.ceil(totalMenuCount / pageSize);
-    const totalActiveMenuCount = filteredMenus.filter((menu) => menu.isActive).length;
-    const totalDeActiveMenuCount = filteredMenus.filter((menu) => !menu.isActive).length;
+    const totalActiveMenuCount = filteredMenus.filter(
+      (menu) => menu.isActive
+    ).length;
+    const totalDeActiveMenuCount = filteredMenus.filter(
+      (menu) => !menu.isActive
+    ).length;
 
     res.status(200).json({
       success: true,
@@ -96,7 +126,8 @@ const getMenus = async (req, res) => {
         totalMenuCount,
         currentPage: pageNumber,
         totalPages,
-        remainingPages: totalPages - pageNumber > 0 ? totalPages - pageNumber : 0,
+        remainingPages:
+          totalPages - pageNumber > 0 ? totalPages - pageNumber : 0,
         pageSize: paginatedMenus.length,
         totalActiveMenuCount,
         totalDeActiveMenuCount,
@@ -112,6 +143,7 @@ const getMenuById = async (req, res) => {
   try {
     const menu = await Menu.findById(req.params.id)
       .populate("restaurantId")
+      .populate("kitchenId")
       .populate({
         path: "categories",
         populate: {
@@ -154,6 +186,21 @@ const updateMenu = async (req, res) => {
       });
     }
 
+    if (
+      updates.kitchenId &&
+      updates.kitchenId !== menu.kitchenId.toString()
+    ) {
+      await kitchenModel.findOneAndUpdate(
+        { _id: menu.kitchenId },
+        { $unset: { menuId: "" } }
+      );
+
+      await kitchenModel.findByIdAndUpdate(updates.kitchenId, {
+        menuId: menu._id,
+      });
+    }
+
+
     const updatedMenu = await Menu.findByIdAndUpdate(id, updates, {
       new: true,
     });
@@ -181,6 +228,11 @@ const deleteMenu = async (req, res) => {
       return res.status(404).json({ error: "Menu not found." });
     }
     await restaurant.findOneAndUpdate(
+      { menuId: id },
+      { $unset: { menuId: "" } },
+      { new: true }
+    );
+    await kitchenModel.findByIdAndUpdate(
       { menuId: id },
       { $unset: { menuId: "" } },
       { new: true }

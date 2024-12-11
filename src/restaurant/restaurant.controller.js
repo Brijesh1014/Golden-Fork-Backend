@@ -2,6 +2,11 @@ const menu = require("../menus/menu.model");
 const User_Model = require("../user/user.model");
 const Restaurant = require("./restaurant.model");
 
+const validateUser = async (userId, role) => {
+  const user = await User_Model.findOne({ _id: userId, role });
+  return user ? user : null;
+};
+
 const createRestaurant = async (req, res) => {
   try {
     const {
@@ -30,7 +35,7 @@ const createRestaurant = async (req, res) => {
     if (!name || !email || !phoneNumber || !location) {
       return res.status(400).json({
         success: false,
-        error: "Missing required fields",
+        error: "Missing required fields: name, email, phoneNumber, or location.",
       });
     }
 
@@ -43,11 +48,11 @@ const createRestaurant = async (req, res) => {
         });
       }
 
-      const restaurantAdminUser = await User_Model.findById(restaurantAdminId);
+      const restaurantAdminUser = await validateUser(restaurantAdminId, "RestaurantAdmin");
       if (!restaurantAdminUser) {
         return res.status(400).json({
           success: false,
-          message: "Restaurant admin not found",
+          message: "Restaurant admin not found.",
         });
       }
     }
@@ -87,14 +92,14 @@ const createRestaurant = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Restaurant created successfully",
+      message: "Restaurant created successfully.",
       restaurant: newRestaurant,
     });
   } catch (error) {
     console.error("Error in createRestaurant:", error.message);
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      error: "Internal server error.",
       details: error.message,
     });
   }
@@ -290,11 +295,7 @@ const deleteRestaurantById = async (req, res) => {
       );
 
       await user.save();
-    } else {
-      return res
-        .status(400)
-        .json({ success: false, message: "User not found" });
-    }
+    } 
 
     await menu.findOneAndDelete({ restaurantId: restaurantId });
 

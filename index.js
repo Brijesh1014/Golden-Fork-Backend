@@ -22,7 +22,7 @@ const contactUsRoute = require("./src/contactUs/contactUs.route");
 const reportRoute = require("./src/report/report.route")
 const generalSettingRoute = require("./src/generalSetting/generalSetting.route")
 const categoryRoute = require("./src/category/category.route")
-
+const kitchenRoute = require("./src/kitchen/kitchen.route")
 app.set("view engine", "ejs");
 const viewsDir = path.join(__dirname, "./src/views");
 app.set("views", viewsDir);
@@ -60,6 +60,7 @@ app.use("/api/contactUs", contactUsRoute);
 app.use("/api/report", reportRoute);
 app.use("/api/generalSetting", generalSettingRoute);
 app.use("/api/category", categoryRoute);
+app.use("/api/kitchen", kitchenRoute);
 
 app.listen(PORT, () => {
   console.log(`Server up and running on port ${PORT}!`);

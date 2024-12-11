@@ -46,7 +46,7 @@ const User = new Schema(
     },
     role: {
       type: String,
-      enum: ["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"],
+      enum: ["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff","KitchenAdmin"],
       default: "Customer",
     },
     restaurants: [
