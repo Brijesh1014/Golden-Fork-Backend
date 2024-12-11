@@ -22,23 +22,36 @@ const createRestaurant = async (req, res) => {
       socialLinks,
       bookingSlot,
       isActive,
-      closingHours
+      closingHours,
+      locationPath,
     } = req.body;
     const userId = req.userId;
 
     if (!name || !email || !phoneNumber || !location) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
-    }
-    const existingRestaurant = await Restaurant.findOne({ restaurantAdminId });
-    if (existingRestaurant) {
       return res.status(400).json({
         success: false,
-        message: `The restaurant admin is already assigned to another restaurant (${existingRestaurant.name}).`,
+        error: "Missing required fields",
       });
     }
-    
+
+    if (restaurantAdminId) {
+      const existingRestaurant = await Restaurant.findOne({ restaurantAdminId });
+      if (existingRestaurant) {
+        return res.status(400).json({
+          success: false,
+          message: `The restaurant admin is already assigned to another restaurant (${existingRestaurant.name}).`,
+        });
+      }
+
+      const restaurantAdminUser = await User_Model.findById(restaurantAdminId);
+      if (!restaurantAdminUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Restaurant admin not found",
+        });
+      }
+    }
+
     const newRestaurant = new Restaurant({
       name,
       location,
@@ -58,46 +71,32 @@ const createRestaurant = async (req, res) => {
       socialLinks,
       bookingSlot,
       isActive,
-      closingHours
+      closingHours,
+      locationPath,
     });
 
-    if (newRestaurant) {
-      const user = await User_Model.findById(restaurantAdminId);
-      if (!user) {
-        return res.status(400).json({
-          success: false,
-          message: "Restaurant Admin not found",
-        });
-      }
-
-      user.restaurants.push(newRestaurant._id);
-
-      await user.save();
+    if (restaurantAdminId) {
+      await User_Model.findByIdAndUpdate(
+        restaurantAdminId,
+        { $push: { restaurants: newRestaurant._id } },
+        { new: true }
+      );
     }
-    await newRestaurant.save();
-
-    // // Handle menuId linking
-    // if (menuId) {
-    //   await newRestaurant.save();
-    //   const menu = await menu.findById(menuId);
-    //   if (menu) {
-    //     menu.restaurantId = newRestaurant._id;
-    //     await menu.save();
-    //   }
-    // }
 
     await newRestaurant.save();
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Restaurant created successfully",
-        restaurant: newRestaurant,
-      });
+
+    res.status(201).json({
+      success: true,
+      message: "Restaurant created successfully",
+      restaurant: newRestaurant,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+    console.error("Error in createRestaurant:", error.message);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      details: error.message,
+    });
   }
 };
 
@@ -131,13 +130,13 @@ const getAllRestaurants = async (req, res) => {
       filter.country = { $regex: country, $options: "i" };
     }
     if (phoneNumber) {
-      filter.phoneNumber ={ $regex: phoneNumber, $options: "i" };
+      filter.phoneNumber = { $regex: phoneNumber, $options: "i" };
     }
     if (restaurantAdminId) {
       filter.restaurantAdminId = { $regex: restaurantAdminId, $options: "i" };
     }
     if (status) {
-      filter.status ={ $regex: status, $options: "i" };
+      filter.status = { $regex: status, $options: "i" };
     }
     if (openingHours) {
       const date = new Date(openingHours);
@@ -145,37 +144,37 @@ const getAllRestaurants = async (req, res) => {
     }
 
     const totalRestaurantCount = await Restaurant.countDocuments(filter);
-    const totalActiveRestaurantCount = await Restaurant.find({isActive:true}).countDocuments(filter)
+    const totalActiveRestaurantCount = await Restaurant.find({
+      isActive: true,
+    }).countDocuments(filter);
 
     const restaurants = await Restaurant.find(filter)
-    .populate("restaurantAdminId")
-    .populate({
-      path: "menuId",
-      populate: {
-        path: "categories",
-        model: "Category",
+      .populate("restaurantAdminId")
+      .populate({
+        path: "menuId",
         populate: {
-          path: "items",
-          model: "CategoryItem",
+          path: "categories",
+          model: "Category",
+          populate: {
+            path: "items",
+            model: "CategoryItem",
+          },
         },
-      },
-    })
-    .populate("createdBy")
-    .populate("tables")
-    .skip(skip)
-    .limit(pageSize);
-  
-  
+      })
+      .populate("createdBy")
+      .populate("tables")
+      .skip(skip)
+      .limit(pageSize);
+
     const totalPages = Math.ceil(totalRestaurantCount / pageSize);
     const remainingPages =
       totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
 
-      const totalTableCount = restaurants.reduce((total, restaurant) => {
-        return total + (restaurant.tables ? restaurant.tables.length : 0);
-      }, 0);
-      
+    const totalTableCount = restaurants.reduce((total, restaurant) => {
+      return total + (restaurant.tables ? restaurant.tables.length : 0);
+    }, 0);
 
-   return res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Restaurants retrieved successfully",
       restaurants,
@@ -186,7 +185,7 @@ const getAllRestaurants = async (req, res) => {
         remainingPages,
         pageSize: restaurants.length,
         totalTableCount,
-        totalActiveRestaurantCount
+        totalActiveRestaurantCount,
       },
     });
   } catch (error) {
@@ -199,33 +198,31 @@ const getAllRestaurants = async (req, res) => {
 const getRestaurantById = async (req, res) => {
   try {
     const restaurant = await Restaurant.findById(req.params.id)
-    .populate({
-      path: "menuId",
-      populate: {
-        path: "categories",
-        model: "Category",
+      .populate({
+        path: "menuId",
         populate: {
-          path: "items",
-          model: "CategoryItem",
+          path: "categories",
+          model: "Category",
+          populate: {
+            path: "items",
+            model: "CategoryItem",
+          },
         },
-      },
-    })
-    .populate("createdBy")
-    .populate("tables");
+      })
+      .populate("createdBy")
+      .populate("tables");
     if (!restaurant) {
       return res
-      .status(404)
-      .json({ success: false, error: "Restaurant not found" });
+        .status(404)
+        .json({ success: false, error: "Restaurant not found" });
     }
-    const totalTableCount = restaurant.tables.length
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Restaurant retrieved successfully",
-        totalTableCount,
-        restaurant,
-      });
+    const totalTableCount = restaurant.tables.length;
+    res.status(200).json({
+      success: true,
+      message: "Restaurant retrieved successfully",
+      totalTableCount,
+      restaurant,
+    });
   } catch (error) {
     res
       .status(500)
@@ -278,7 +275,9 @@ const deleteRestaurantById = async (req, res) => {
     const deletedRestaurant = await Restaurant.findByIdAndDelete(restaurantId);
 
     if (!deletedRestaurant) {
-      return res.status(404).json({ success: false, error: "Restaurant not found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Restaurant not found" });
     }
 
     const restaurantAdminId = deletedRestaurant.restaurantAdminId;
@@ -292,19 +291,23 @@ const deleteRestaurantById = async (req, res) => {
 
       await user.save();
     } else {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
     }
 
-     await menu.findOneAndDelete({ restaurantId: restaurantId });
+    await menu.findOneAndDelete({ restaurantId: restaurantId });
 
-    res.status(200).json({ success: true, message: "Restaurant and associated data deleted successfully" });
-
+    res.status(200).json({
+      success: true,
+      message: "Restaurant and associated data deleted successfully",
+    });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
   }
 };
-
-
 
 module.exports = {
   createRestaurant,

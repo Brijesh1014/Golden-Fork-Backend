@@ -84,7 +84,10 @@ const Restaurant = new Schema(
     tables:[{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Table",
-    }]
+    }],
+    locationPath:{
+      type:String
+    }
   },
   { timestamps: true }
 );
