@@ -92,7 +92,7 @@ const getKitchens = async (req, res) => {
     const totalKitchenCount = await Kitchen.countDocuments();
     const totalActiveKitchenCount = await Kitchen.find({
       status: "Active",
-    });
+    }).countDocuments();
     const kitchens = await Kitchen.find()
       .populate("restaurantId")
       .populate("orders")
