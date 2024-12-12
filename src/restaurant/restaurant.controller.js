@@ -83,7 +83,7 @@ const createRestaurant = async (req, res) => {
     if (restaurantAdminId) {
       await User_Model.findByIdAndUpdate(
         restaurantAdminId,
-        { $push: { restaurants: newRestaurant._id } },
+       { restaurant: newRestaurant._id },
         { new: true }
       );
     }
@@ -287,28 +287,94 @@ const deleteRestaurantById = async (req, res) => {
 
     const restaurantAdminId = deletedRestaurant.restaurantAdminId;
 
-    const user = await User_Model.findById(restaurantAdminId);
 
-    if (user) {
-      user.restaurants = user.restaurants.filter(
-        (restaurant) => restaurant.toString() !== restaurantId
+    if (restaurantAdminId) {
+      await User_Model.findByIdAndUpdate(
+        restaurantAdminId,
+        { $unset: { restaurant: "" } }, 
+        { new: true }
       );
+    }
 
-      await user.save();
-    } 
-
-    await menu.findOneAndDelete({ restaurantId: restaurantId });
+    await menu.deleteMany({ restaurantId });
 
     res.status(200).json({
       success: true,
       message: "Restaurant and associated data deleted successfully",
     });
   } catch (error) {
+    console.error("Error deleting restaurant:", error);
     res
       .status(500)
-      .json({ error: "Internal server error", details: error.message });
+      .json({ success: false, error: "Internal server error", details: error.message });
   }
 };
+
+
+
+const assignRestaurantAdmin = async (req, res) => {
+  try {
+    const { restaurantId, restaurantAdminId } = req.body;
+
+    if (!restaurantId || !restaurantAdminId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: restaurantId or restaurantAdminId",
+      });
+    }
+
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        message: "Restaurant not found.",
+      });
+    }
+
+    const restaurantAdmin = await User_Model.findById(restaurantAdminId);
+    if (!restaurantAdmin || restaurantAdmin.role !== "RestaurantAdmin") {
+      return res.status(400).json({
+        success: false,
+        message: "Restaurant admin not found or invalid role.",
+      });
+    }
+
+    if (restaurant.restaurantAdminId) {
+      await User_Model.findByIdAndUpdate(
+        restaurant.restaurantAdminId,
+        { $unset: { restaurant: "" } },
+        { new: true }
+      );
+    }
+
+    restaurant.restaurantAdminId = restaurantAdminId;
+    await restaurant.save();
+
+    await User_Model.findByIdAndUpdate(
+      restaurantAdminId,
+      { restaurant: restaurantId },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Restaurant admin assigned successfully.",
+      restaurant,
+    });
+  } catch (error) {
+    console.error("Error assigning restaurant admin:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error assigning restaurant admin.",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+
 
 module.exports = {
   createRestaurant,
@@ -316,4 +382,5 @@ module.exports = {
   getRestaurantById,
   updateRestaurantById,
   deleteRestaurantById,
+  assignRestaurantAdmin
 };

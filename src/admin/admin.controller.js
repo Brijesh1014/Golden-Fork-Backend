@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const shareCredential = require("../services/shareCredential.service");
 const Table = require("../table/table.model");
 const restaurant = require("../restaurant/restaurant.model");
+const kitchenModel = require("../kitchen/kitchen.model");
 const getAllUsers = async (req, res) => {
   try {
     const {
@@ -26,9 +27,9 @@ const getAllUsers = async (req, res) => {
 
     if (name) {
       const nameRegex = { $regex: name, $options: "i" };
-    
+
       const nameParts = name.split(" ");
-    
+
       const conditions = [];
       if (nameParts.length > 1) {
         conditions.push(
@@ -42,15 +43,11 @@ const getAllUsers = async (req, res) => {
           }
         );
       }
-    
-      conditions.push(
-        { firstName: nameRegex },
-        { lastName: nameRegex }
-      );
-    
+
+      conditions.push({ firstName: nameRegex }, { lastName: nameRegex });
+
       filter.$or = conditions;
     }
-    
 
     if (isEmailVerified !== undefined) {
       filter.isEmailVerified = isEmailVerified === "true";
@@ -150,14 +147,17 @@ const deleteById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedUser = await User_Model.findByIdAndDelete(id);
+    const user = await User_Model.findById(id);
 
-    if (!deletedUser) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
+    await restaurant.deleteMany({ restaurantAdminId: id });
+    await kitchenModel.deleteMany({ kitchenAdminId: id });
+    await User_Model.findByIdAndDelete(id);
 
     return res.status(200).json({
       success: true,
@@ -263,12 +263,10 @@ const getDailyRevenue = async (req, res) => {
       },
     ]);
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        data: revenue[0] || { totalRevenue: 0, totalOrders: 0 },
-      });
+    res.status(200).json({
+      success: true,
+      data: revenue[0] || { totalRevenue: 0, totalOrders: 0 },
+    });
   } catch (error) {
     res
       .status(500)
@@ -374,8 +372,8 @@ const createUser = async (req, res) => {
       zipCode,
       deliveryAddress,
       role,
-      restaurants,
-      kitchens,
+      restaurant,
+      kitchen,
     } = req.body;
 
     if (!email) {
@@ -384,7 +382,7 @@ const createUser = async (req, res) => {
         message: "Email is required.",
       });
     }
-    const userId = req.userId
+    const userId = req.userId;
 
     const existingUser = await User_Model.findOne({ email });
     if (existingUser) {
@@ -412,25 +410,24 @@ const createUser = async (req, res) => {
       zipCode,
       deliveryAddress,
       role,
-      restaurants,
-      kitchens,
-      createdBy:userId,
-      isEmailVerified: true, 
+      restaurant,
+      kitchen,
+      createdBy: userId,
+      isEmailVerified: true,
     });
 
-    let name  = `${firstName} ${lastName}`
+    let name = `${firstName} ${lastName}`;
 
     if (newUser) {
       await shareCredential(
         name,
-        email,                           
-        generatedPassword,               
-        email,                           
-        "Your Account Credentials",     
-        "../views/shareCredential.ejs"   
+        email,
+        generatedPassword,
+        email,
+        "Your Account Credentials",
+        "../views/shareCredential.ejs"
       );
     }
-    
 
     return res.status(201).json({
       success: true,
@@ -451,9 +448,7 @@ const getAvailableTableAndSlotsForAllRestaurants = async (req, res) => {
     const { reservationDate, tableId } = req.query;
 
     if (!reservationDate) {
-      return res
-        .status(400)
-        .json({ error: "reservationDate is required." });
+      return res.status(400).json({ error: "reservationDate is required." });
     }
 
     const date = new Date(reservationDate);
@@ -480,9 +475,11 @@ const getAvailableTableAndSlotsForAllRestaurants = async (req, res) => {
 
     // Query for all restaurants
     const restaurants = await restaurant.find();
-    
+
     if (!restaurants.length) {
-      return res.status(404).json({ success: false, message: "No restaurants found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "No restaurants found." });
     }
 
     const availableSlotsForAllRestaurants = [];
@@ -547,9 +544,12 @@ const getAvailableTableAndSlotsForAllRestaurants = async (req, res) => {
       }
     }
 
-    const totalAvailableTableCount = availableSlotsForAllRestaurants.reduce((total, restaurant) => {
-      return total + restaurant.availableSlotsForTables.length;
-    }, 0);
+    const totalAvailableTableCount = availableSlotsForAllRestaurants.reduce(
+      (total, restaurant) => {
+        return total + restaurant.availableSlotsForTables.length;
+      },
+      0
+    );
 
     if (totalAvailableTableCount === 0) {
       return res.status(404).json({
@@ -673,7 +673,47 @@ const getAvailableTableAndSlots = async (req, res) => {
     res.status(500).json({ error: "Internal server error." });
   }
 };
+const availableRestaurantAdmin = async (req, res) => {
+  try {
+    const users = await User_Model.find({
+      role: "RestaurantAdmin",
+      restaurant: null,
+    });
 
+    res.status(200).json({
+      success: true,
+      data: users,
+      message: "Available restaurant admins fetched successfully.",
+    });
+  } catch (error) {
+    console.error("Error fetching available restaurant admins:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching available restaurant admins.",
+    });
+  }
+};
+
+const availableKitchenAdmin = async (req, res) => {
+  try {
+    const users = await User_Model.find({
+      role: "KitchenAdmin",
+      kitchen: null,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: users,
+      message: "Available kitchen admins fetched successfully.",
+    });
+  } catch (error) {
+    console.error("Error fetching available kitchen admins:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching available kitchen admins.",
+    });
+  }
+};
 
 module.exports = {
   getAllUsers,
@@ -688,5 +728,7 @@ module.exports = {
   searchOrders,
   createUser,
   getAvailableTableAndSlotsForAllRestaurants,
-  getAvailableTableAndSlots
+  getAvailableTableAndSlots,
+  availableRestaurantAdmin,
+  availableKitchenAdmin,
 };

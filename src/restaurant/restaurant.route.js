@@ -13,4 +13,6 @@ router.put('/updateRestaurantById/:id',auth(["Customer", "RestaurantAdmin", "Sup
 
 router.delete('/deleteRestaurantById/:id',auth(["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"]), restaurantController.deleteRestaurantById);
 
+router.post('/assignRestaurantAdmin', auth(["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"]), restaurantController.assignRestaurantAdmin);
+
 module.exports = router;

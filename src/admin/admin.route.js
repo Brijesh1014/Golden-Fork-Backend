@@ -29,5 +29,9 @@ router.get("/getAvailableTableAndSlotsForAllRestaurants",auth(["SuperAdmin","Res
 
 router.get("/getAvailableTableAndSlots",auth([ "RestaurantAdmin", "SuperAdmin"]),adminController.getAvailableTableAndSlots);
 
+router.get("/availableRestaurantAdmin",auth([ "RestaurantAdmin", "SuperAdmin"]),adminController.availableRestaurantAdmin);
+
+router.get("/availableKitchenAdmin",auth([ "RestaurantAdmin", "SuperAdmin"]),adminController.availableKitchenAdmin);
+
 
 module.exports = router;

@@ -63,7 +63,7 @@ const createKitchen = async (req, res) => {
     if (kitchenAdminId) {
       await User_Model.findByIdAndUpdate(
         kitchenAdminId,
-        { $push: { kitchen: kitchen._id } },
+        { kitchen: kitchen._id },
         { new: true }
       );
     }
@@ -225,16 +225,16 @@ const deleteKitchen = async (req, res) => {
     }
 
     const kitchenAdminId = kitchen.kitchenAdminId;
-    const user = await User_Model.findById(kitchenAdminId);
 
-    if (user) {
-      user.kitchens = user.kitchens.filter(
-        (kitchen) => kitchen.toString() !== id
+    if (kitchenAdminId) {
+      await User_Model.findByIdAndUpdate(
+        kitchenAdminId,
+        { $unset: { kitchen: "" } }, 
+        { new: true }
       );
-      await user.save();
     }
 
-    await menu.findOneAndDelete({ kitchenId: id });
+    await menu.deleteMany({ kitchenId: id });
 
     await restaurant.findOneAndUpdate(
       { kitchenId: id },
@@ -243,17 +243,17 @@ const deleteKitchen = async (req, res) => {
 
     await Kitchen.findByIdAndDelete(id);
 
-    res
-      .status(200)
-      .json({ success: true, message: "Kitchen deleted successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Kitchen and associated data deleted successfully",
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error deleting kitchen",
-        error: error.message,
-      });
+    console.error("Error deleting kitchen:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting kitchen",
+      error: error.message,
+    });
   }
 };
 
@@ -284,12 +284,12 @@ const assignKitchenAdmin = async (req, res) => {
       });
     }
 
-    const existingKitchen = await Kitchen.findOne({ kitchenAdminId });
-    if (existingKitchen) {
-      return res.status(400).json({
-        success: false,
-        message: "Kitchen admin is already assigned to another kitchen.",
-      });
+    if (kitchen.kitchenAdminId) {
+      await User_Model.findByIdAndUpdate(
+        kitchen.kitchenAdminId,
+        { $unset: { kitchen: "" } },
+        { new: true }
+      );
     }
 
     kitchen.kitchenAdminId = kitchenAdminId;
@@ -297,7 +297,7 @@ const assignKitchenAdmin = async (req, res) => {
 
     await User_Model.findByIdAndUpdate(
       kitchenAdminId,
-      { $push: { kitchens: kitchenId } },
+      { kitchen: kitchenId },
       { new: true }
     );
 
@@ -307,6 +307,7 @@ const assignKitchenAdmin = async (req, res) => {
       kitchen,
     });
   } catch (error) {
+    console.error("Error assigning kitchen admin:", error);
     res.status(500).json({
       success: false,
       message: "Error assigning kitchen admin.",
@@ -314,6 +315,7 @@ const assignKitchenAdmin = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {
   createKitchen,
