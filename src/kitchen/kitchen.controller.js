@@ -84,16 +84,20 @@ const createKitchen = async (req, res) => {
 
 const getKitchens = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, name } = req.query;
 
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
     const skip = (pageNumber - 1) * pageSize;
-    const totalKitchenCount = await Kitchen.countDocuments();
+    let filter = {};
+    if (name) {
+      filter.name = { $regex: name, $options: "i" };
+    }
+    const totalKitchenCount = await Kitchen.countDocuments(filter);
     const totalActiveKitchenCount = await Kitchen.find({
       status: "Active",
-    }).countDocuments();
-    const kitchens = await Kitchen.find()
+    }).countDocuments(filter);
+    const kitchens = await Kitchen.find(filter)
       .populate("restaurantId")
       .populate("orders")
       .populate("kitchenAdminId")
@@ -130,13 +134,11 @@ const getKitchens = async (req, res) => {
       },
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching kitchens",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching kitchens",
+      error: error.message,
+    });
   }
 };
 
@@ -195,21 +197,17 @@ const updateKitchen = async (req, res) => {
     const updatedKitchen = await Kitchen.findByIdAndUpdate(id, updates, {
       new: true,
     });
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Kitchen updated successfully",
-        updatedKitchen,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Kitchen updated successfully",
+      updatedKitchen,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error updating kitchen",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error updating kitchen",
+      error: error.message,
+    });
   }
 };
 
@@ -229,7 +227,7 @@ const deleteKitchen = async (req, res) => {
     if (kitchenAdminId) {
       await User_Model.findByIdAndUpdate(
         kitchenAdminId,
-        { $unset: { kitchen: "" } }, 
+        { $unset: { kitchen: "" } },
         { new: true }
       );
     }
@@ -315,7 +313,6 @@ const assignKitchenAdmin = async (req, res) => {
     });
   }
 };
-
 
 module.exports = {
   createKitchen,

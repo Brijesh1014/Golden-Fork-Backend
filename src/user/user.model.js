@@ -46,20 +46,24 @@ const User = new Schema(
     },
     role: {
       type: String,
-      enum: ["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff","KitchenAdmin"],
+      enum: [
+        "Customer",
+        "RestaurantAdmin",
+        "SuperAdmin",
+        "KitchenStaff",
+        "KitchenAdmin",
+      ],
       default: "Customer",
     },
-    restaurant: 
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Restaurant",
-      },
-  
-    kitchen: 
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Kitchen",
-      },
+    restaurant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
+    },
+
+    kitchen: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Kitchen",
+    },
 
     fcmToken: {
       type: String,
@@ -81,11 +85,11 @@ const User = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    status:{
+    status: {
       type: String,
       enum: ["Activate", "Deactivate"],
       default: "Activate",
-    }
+    },
   },
   { timestamps: true }
 );
