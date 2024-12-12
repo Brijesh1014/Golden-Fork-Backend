@@ -120,8 +120,18 @@ const getTableById = async (req, res) => {
       }
   
       const table = await Table_Model.findById(id);
+      
       if (!table) {
         return res.status(404).json({ error: "Table not found." });
+      }
+
+      let existingTable = await Table_Model.findOne({ restaurantId:table.restaurantId, tableNumber });
+
+      if (existingTable) {
+        return res.status(400).json({
+          success: false,
+          message: `Table number ${tableNumber} already exists for this restaurant.`,
+        });
       }
   
       if (restaurantId) table.restaurantId = restaurantId;
