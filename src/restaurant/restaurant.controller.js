@@ -117,43 +117,20 @@ const getAllRestaurants = async (req, res) => {
       restaurantAdminId,
       status,
       openingHours,
+      withoutPagination = false,
     } = req.query;
 
-    const pageNumber = parseInt(page);
-    const pageSize = parseInt(limit);
-    const skip = (pageNumber - 1) * pageSize;
+    const filter = {};
 
-    let filter = {};
+    if (name) filter.name = { $regex: name, $options: "i" };
+    if (location) filter.location = { $regex: location, $options: "i" };
+    if (country) filter.country = { $regex: country, $options: "i" };
+    if (phoneNumber) filter.phoneNumber = { $regex: phoneNumber, $options: "i" };
+    if (restaurantAdminId) filter.restaurantAdminId = { $regex: restaurantAdminId, $options: "i" };
+    if (status) filter.status = { $regex: status, $options: "i" };
+    if (openingHours) filter.openingHours = { $gte: new Date(openingHours) };
 
-    if (name) {
-      filter.name = { $regex: name, $options: "i" };
-    }
-    if (location) {
-      filter.location = { $regex: location, $options: "i" };
-    }
-    if (country) {
-      filter.country = { $regex: country, $options: "i" };
-    }
-    if (phoneNumber) {
-      filter.phoneNumber = { $regex: phoneNumber, $options: "i" };
-    }
-    if (restaurantAdminId) {
-      filter.restaurantAdminId = { $regex: restaurantAdminId, $options: "i" };
-    }
-    if (status) {
-      filter.status = { $regex: status, $options: "i" };
-    }
-    if (openingHours) {
-      const date = new Date(openingHours);
-      filter.openingHours = { $gte: date };
-    }
-
-    const totalRestaurantCount = await Restaurant.countDocuments(filter);
-    const totalActiveRestaurantCount = await Restaurant.find({
-      isActive: true,
-    }).countDocuments(filter);
-
-    const restaurants = await Restaurant.find(filter)
+    const query = Restaurant.find(filter)
       .populate("restaurantAdminId")
       .populate({
         path: "menuId",
@@ -167,16 +144,32 @@ const getAllRestaurants = async (req, res) => {
         },
       })
       .populate("createdBy")
-      .populate("tables")
-      .skip(skip)
-      .limit(pageSize);
+      .populate("tables");
+
+    if (String(withoutPagination) === "true") {
+      const restaurants = await query.exec();
+      return res.status(200).json({
+        success: true,
+        message: "All restaurants retrieved successfully",
+        restaurants,
+      });
+    }
+
+    const pageNumber = parseInt(page, 10);
+    const pageSize = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * pageSize;
+
+    const [restaurants, totalRestaurantCount, totalActiveRestaurantCount] = await Promise.all([
+      query.skip(skip).limit(pageSize).exec(),
+      Restaurant.countDocuments(filter),
+      Restaurant.countDocuments({ ...filter, isActive: true }),
+    ]);
 
     const totalPages = Math.ceil(totalRestaurantCount / pageSize);
-    const remainingPages =
-      totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
+    const remainingPages = Math.max(totalPages - pageNumber, 0);
 
     const totalTableCount = restaurants.reduce((total, restaurant) => {
-      return total + (restaurant.tables ? restaurant.tables.length : 0);
+      return total + (restaurant.tables?.length || 0);
     }, 0);
 
     return res.status(200).json({
@@ -185,20 +178,23 @@ const getAllRestaurants = async (req, res) => {
       restaurants,
       meta: {
         totalRestaurantCount,
+        totalActiveRestaurantCount,
         currentPage: pageNumber,
         totalPages,
         remainingPages,
         pageSize: restaurants.length,
         totalTableCount,
-        totalActiveRestaurantCount,
       },
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      details: error.message,
+    });
   }
 };
+
 
 const getRestaurantById = async (req, res) => {
   try {

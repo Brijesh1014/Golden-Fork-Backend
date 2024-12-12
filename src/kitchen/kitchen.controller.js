@@ -84,20 +84,13 @@ const createKitchen = async (req, res) => {
 
 const getKitchens = async (req, res) => {
   try {
-    const { page = 1, limit = 10, name } = req.query;
+    const { page = 1, limit = 10, name, withoutPagination = false } = req.query;
 
-    const pageNumber = parseInt(page);
-    const pageSize = parseInt(limit);
-    const skip = (pageNumber - 1) * pageSize;
-    let filter = {};
-    if (name) {
-      filter.name = { $regex: name, $options: "i" };
-    }
-    const totalKitchenCount = await Kitchen.countDocuments(filter);
-    const totalActiveKitchenCount = await Kitchen.find({
-      status: "Active",
-    }).countDocuments(filter);
-    const kitchens = await Kitchen.find(filter)
+    const filter = {};
+
+    if (name) filter.name = { $regex: name, $options: "i" };
+
+    const query = Kitchen.find(filter)
       .populate("restaurantId")
       .populate("orders")
       .populate("kitchenAdminId")
@@ -112,35 +105,52 @@ const getKitchens = async (req, res) => {
           },
         },
       })
-      .populate("createdBy")
-      .skip(skip)
-      .limit(pageSize);
+      .populate("createdBy");
+
+    if (String(withoutPagination) === "true") {
+      const kitchens = await query.exec();
+      return res.status(200).json({
+        success: true,
+        message: "All kitchens retrieved successfully",
+        kitchens,
+      });
+    }
+
+    const pageNumber = parseInt(page, 10);
+    const pageSize = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * pageSize;
+
+    const [kitchens, totalKitchenCount, totalActiveKitchenCount] = await Promise.all([
+      query.skip(skip).limit(pageSize).exec(),
+      Kitchen.countDocuments(filter),
+      Kitchen.countDocuments({ ...filter, status: "Active" }),
+    ]);
 
     const totalPages = Math.ceil(totalKitchenCount / pageSize);
-    const remainingPages =
-      totalPages - pageNumber > 0 ? totalPages - pageNumber : 0;
+    const remainingPages = Math.max(totalPages - pageNumber, 0);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Kitchens retrieved successfully",
       kitchens,
       meta: {
         totalKitchenCount,
+        totalActiveKitchenCount,
         currentPage: pageNumber,
         totalPages,
         remainingPages,
         pageSize: kitchens.length,
-        totalActiveKitchenCount,
       },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Error fetching kitchens",
       error: error.message,
     });
   }
 };
+
 
 const getKitchenById = async (req, res) => {
   try {
