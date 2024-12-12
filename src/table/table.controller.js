@@ -113,7 +113,7 @@ const getTableById = async (req, res) => {
   const updateTable = async (req, res) => {
     try {
       const { id } = req.params; 
-      const { restaurantId, tableNumber, capacity } = req.body;
+      const { restaurantId, tableNumber, capacity,isAvailable } = req.body;
   
       if (!id) {
         return res.status(400).json({ error: "Table ID is required." });
