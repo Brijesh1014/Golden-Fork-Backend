@@ -117,11 +117,27 @@ const getKitchens = async (req, res) => {
       .populate("createdBy");
 
     if (String(withoutPagination) === "true") {
-      const kitchens = await query.exec();
+      const kitchensWithoutMenu = await Kitchen.find({ menuId: null })
+        .populate("restaurantId")
+        .populate("orders")
+        .populate("kitchenAdminId")
+        .populate({
+          path: "menuId",
+          populate: {
+            path: "categories",
+            model: "Category",
+            populate: {
+              path: "items",
+              model: "CategoryItem",
+            },
+          },
+        })
+        .populate("createdBy");
+
       return res.status(200).json({
         success: true,
-        message: "All kitchens retrieved successfully",
-        kitchens,
+        message: "All kitchens retrieved successfully (without pagination)",
+        kitchens: kitchensWithoutMenu,
       });
     }
 
@@ -129,12 +145,11 @@ const getKitchens = async (req, res) => {
     const pageSize = parseInt(limit, 10);
     const skip = (pageNumber - 1) * pageSize;
 
-    const [kitchens, totalKitchenCount, totalActiveKitchenCount] =
-      await Promise.all([
-        query.skip(skip).limit(pageSize).exec(),
-        Kitchen.countDocuments(filter),
-        Kitchen.countDocuments({ ...filter, status: "Active" }),
-      ]);
+    const [kitchens, totalKitchenCount, totalActiveKitchenCount] = await Promise.all([
+      query.skip(skip).limit(pageSize).exec(),
+      Kitchen.countDocuments(filter),
+      Kitchen.countDocuments({ ...filter, status: "Active" }),
+    ]);
 
     const totalPages = Math.ceil(totalKitchenCount / pageSize);
     const remainingPages = Math.max(totalPages - pageNumber, 0);

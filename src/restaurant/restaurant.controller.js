@@ -147,10 +147,23 @@ const getAllRestaurants = async (req, res) => {
       .populate("tables");
 
     if (String(withoutPagination) === "true") {
-      const restaurants = await query.exec();
+      const restaurants = await Restaurant.find({menuId:null}).populate("restaurantAdminId")
+      .populate({
+        path: "menuId",
+        populate: {
+          path: "categories",
+          model: "Category",
+          populate: {
+            path: "items",
+            model: "CategoryItem",
+          },
+        },
+      })
+      .populate("createdBy")
+      .populate("tables");
       return res.status(200).json({
         success: true,
-        message: "All restaurants retrieved successfully",
+        message: "All restaurants retrieved successfully (without pagination)",
         restaurants,
       });
     }
