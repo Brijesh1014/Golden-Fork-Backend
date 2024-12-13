@@ -53,6 +53,8 @@ const createKitchen = async (req, res) => {
       restaurantId,
       createdBy: userId,
       status,
+      kitchenAdminId
+      
     });
 
     await kitchen.save();
