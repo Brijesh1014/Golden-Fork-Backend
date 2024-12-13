@@ -2,14 +2,20 @@ const CMS = require("./cms.model");
 
 const getAllCMSPages = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, title } = req.query;
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
     const skip = (pageNumber - 1) * pageSize;
-    const totalCmsPageCount = await CMS.countDocuments()
-      .skip(skip)
-      .limit(pageSize);
-    const pages = await CMS.find();
+
+    let filter = {};
+
+    if (title) {
+      filter.title = { $regex: title, $options: "i" };
+    }
+    
+    const totalCmsPageCount = await CMS.countDocuments(filter);
+
+    const pages = await CMS.find(filter).skip(skip).limit(pageSize);
 
     const totalPages = Math.ceil(totalCmsPageCount / pageSize);
     const remainingPages =
@@ -17,7 +23,7 @@ const getAllCMSPages = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message:"CMS page retrieved successfully",
+      message: "CMS page retrieved successfully",
       data: pages,
       meta: {
         totalCmsPageCount,
@@ -52,7 +58,11 @@ const createCMSPage = async (req, res) => {
     const userId = req.userId;
     const newPage = new CMS({ title, content, slug, createdBy: userId });
     await newPage.save();
-    res.status(201).json({ success: true,message:"CMS page created successfully ", data: newPage });
+    res.status(201).json({
+      success: true,
+      message: "CMS page created successfully ",
+      data: newPage,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -73,7 +83,11 @@ const updateCMSPage = async (req, res) => {
         .json({ success: false, message: "Page not found" });
     }
 
-    res.status(200).json({ success: true,message:"CMS page updated successfully ", data: updatedPage });
+    res.status(200).json({
+      success: true,
+      message: "CMS page updated successfully ",
+      data: updatedPage,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
