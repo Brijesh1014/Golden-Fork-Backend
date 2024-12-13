@@ -46,6 +46,14 @@ const createKitchen = async (req, res) => {
           message: "Kitchen admin not found.",
         });
       }
+      const adminAssignedKitchen = await Kitchen.findOne({ kitchenAdminId });
+
+      if (adminAssignedKitchen) {
+        return res.status(400).json({
+          success: false,
+          message: "This kitchen admin is already assigned to another kitchen.",
+        });
+      }
     }
 
     const kitchen = new Kitchen({
@@ -53,8 +61,7 @@ const createKitchen = async (req, res) => {
       restaurantId,
       createdBy: userId,
       status,
-      kitchenAdminId
-      
+      kitchenAdminId,
     });
 
     await kitchen.save();
@@ -122,11 +129,12 @@ const getKitchens = async (req, res) => {
     const pageSize = parseInt(limit, 10);
     const skip = (pageNumber - 1) * pageSize;
 
-    const [kitchens, totalKitchenCount, totalActiveKitchenCount] = await Promise.all([
-      query.skip(skip).limit(pageSize).exec(),
-      Kitchen.countDocuments(filter),
-      Kitchen.countDocuments({ ...filter, status: "Active" }),
-    ]);
+    const [kitchens, totalKitchenCount, totalActiveKitchenCount] =
+      await Promise.all([
+        query.skip(skip).limit(pageSize).exec(),
+        Kitchen.countDocuments(filter),
+        Kitchen.countDocuments({ ...filter, status: "Active" }),
+      ]);
 
     const totalPages = Math.ceil(totalKitchenCount / pageSize);
     const remainingPages = Math.max(totalPages - pageNumber, 0);
@@ -152,7 +160,6 @@ const getKitchens = async (req, res) => {
     });
   }
 };
-
 
 const getKitchenById = async (req, res) => {
   try {
