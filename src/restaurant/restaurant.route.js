@@ -3,7 +3,7 @@ const router = express.Router();
 const restaurantController = require('./restaurant.controller');
 const auth = require('../middleware/auth.middleware');
 
-router.post('/createRestaurant', auth(["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"]), restaurantController.createRestaurant);
+router.post('/createRestaurant', auth(["SuperAdmin"]), restaurantController.createRestaurant);
 
 router.get('/getAllRestaurants',auth(["Customer", "RestaurantAdmin", "SuperAdmin", "KitchenStaff"]), restaurantController.getAllRestaurants);
 
