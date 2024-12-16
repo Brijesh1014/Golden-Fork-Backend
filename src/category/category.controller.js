@@ -1,5 +1,6 @@
 const Category = require("../category/category.model");
 const categoryItem = require("../categoryItem/categoryItem.model");
+const menu = require("../menus/menu.model");
 
 const createCategory = async (req, res) => {
     try {
@@ -136,6 +137,10 @@ const createCategory = async (req, res) => {
       }
 
       await Category.deleteOne(deletedCategory._id)
+      await menu.updateMany(
+        {},
+        { $pull: { categories: deletedCategory._id } }
+      );
       await categoryItem.deleteMany({categoryId:deletedCategory._id})
   
       res.status(200).json({ success: true, message: "Category deleted successfully.", category: deletedCategory });

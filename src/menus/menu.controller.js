@@ -172,6 +172,19 @@ const updateMenu = async (req, res) => {
       return res.status(404).json({ success: false, error: "Menu not found." });
     }
 
+    if (updates.categories && updates.categories.length > 0) {
+      const categoryCount = await category.countDocuments({
+        _id: { $in: updates.categories },
+      });
+
+      if (categoryCount !== updates.categories.length) {
+        return res.status(400).json({
+          success: false,
+          error: "One or more provided categories do not exist.",
+        });
+      }
+    }
+
     if (
       updates.restaurantId &&
       updates.restaurantId !== menu.restaurantId.toString()
@@ -199,7 +212,6 @@ const updateMenu = async (req, res) => {
         menuId: menu._id,
       });
     }
-
 
     const updatedMenu = await Menu.findByIdAndUpdate(id, updates, {
       new: true,
