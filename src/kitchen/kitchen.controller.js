@@ -117,7 +117,9 @@ const getKitchens = async (req, res) => {
       .populate("createdBy");
 
     if (String(withoutPagination) === "true") {
-      const kitchensWithoutMenu = await Kitchen.find({ menuId: null })
+      const kitchensWithoutMenu = await Kitchen.find({
+        $or: [{ menuId: null }, { menuId: { $exists: false } }],
+      })
         .populate("restaurantId")
         .populate("orders")
         .populate("kitchenAdminId")

@@ -230,31 +230,40 @@ const updateMenu = async (req, res) => {
     });
   }
 };
-
 const deleteMenu = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const menu = await Menu.findByIdAndDelete(id);
+    const menu = await Menu.findById(id);
     if (!menu) {
-      return res.status(404).json({ error: "Menu not found." });
+      return res.status(404).json({ success: false, error: "Menu not found." });
     }
+
     await restaurant.findOneAndUpdate(
       { menuId: id },
-      { $unset: { menuId: "" } },
-      { new: true }
-    );
-    await kitchenModel.findByIdAndUpdate(
-      { menuId: id },
-      { $unset: { menuId: "" } },
+      { $set: { menuId: null } },
       { new: true }
     );
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Menu deleted successfully." });
+    await kitchenModel.findOneAndUpdate(
+      { menuId: id },
+      { $set: { menuId: null } }, 
+      { new: true }
+    );
+
+    await Menu.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Menu deleted successfully.",
+    });
   } catch (error) {
-    res.status(500).json({ error: "Server error. Unable to delete menu." });
+    console.error("Error deleting menu:", error.message);
+    res.status(500).json({
+      success: false,
+      error: "Server error. Unable to delete menu.",
+      details: error.message,
+    });
   }
 };
 

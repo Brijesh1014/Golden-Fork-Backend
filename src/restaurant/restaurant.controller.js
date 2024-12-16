@@ -147,7 +147,9 @@ const getAllRestaurants = async (req, res) => {
       .populate("tables");
 
     if (String(withoutPagination) === "true") {
-      const restaurants = await Restaurant.find({menuId:null}).populate("restaurantAdminId")
+      const restaurants = await Restaurant.find({
+        $or: [{ menuId: null }, { menuId: { $exists: false } }],
+      }).populate("restaurantAdminId")
       .populate({
         path: "menuId",
         populate: {
