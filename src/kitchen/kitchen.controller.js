@@ -147,11 +147,12 @@ const getKitchens = async (req, res) => {
     const pageSize = parseInt(limit, 10);
     const skip = (pageNumber - 1) * pageSize;
 
-    const [kitchens, totalKitchenCount, totalActiveKitchenCount] = await Promise.all([
-      query.skip(skip).limit(pageSize).exec(),
-      Kitchen.countDocuments(filter),
-      Kitchen.countDocuments({ ...filter, status: "Active" }),
-    ]);
+    const [kitchens, totalKitchenCount, totalActiveKitchenCount] =
+      await Promise.all([
+        query.skip(skip).limit(pageSize).exec(),
+        Kitchen.countDocuments(filter),
+        Kitchen.countDocuments({ ...filter, status: "Active" }),
+      ]);
 
     const totalPages = Math.ceil(totalKitchenCount / pageSize);
     const remainingPages = Math.max(totalPages - pageNumber, 0);
@@ -181,6 +182,9 @@ const getKitchens = async (req, res) => {
 const getKitchenById = async (req, res) => {
   try {
     const kitchen = await Kitchen.findById(req.params.id)
+      .populate("restaurantId")
+      .populate("orders")
+      .populate("kitchenAdminId")
       .populate({
         path: "menuId",
         populate: {
@@ -192,7 +196,6 @@ const getKitchenById = async (req, res) => {
           },
         },
       })
-      .populate("restaurantId")
       .populate("createdBy");
     if (!kitchen) {
       return res
