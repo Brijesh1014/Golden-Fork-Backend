@@ -4,7 +4,7 @@ const sendReplyModel = require("./sendReply.model");
 const createContactUs = async (req, res) => {
   try {
     const createdBy = req.userId;
-    const { name, email, subject, messageTitle, message, contactNo } = req.body;
+    const { name, email, subject, messageTitle, message, contactNo,isActive } = req.body;
     if (!name || !email) {
       return res.status(400).json({
         success: false,
@@ -19,6 +19,7 @@ const createContactUs = async (req, res) => {
       message,
       createdBy,
       contactNo,
+      isActive
     });
 
     await contactUsSendMail(
@@ -52,7 +53,7 @@ const createContactUs = async (req, res) => {
 };
 const getAllContactUs = async (req, res) => {
   try {
-    const { page = 1, limit = 10, name, email, subject } = req.query;
+    const { page = 1, limit = 10, name, email, subject,isActive } = req.query;
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
     const skip = (pageNumber - 1) * pageSize;
@@ -66,6 +67,9 @@ const getAllContactUs = async (req, res) => {
     }
     if (subject) {
       filter.subject = { $regex: subject, $options: "i" };
+    }
+    if (isActive) {
+      filter.isActive = { $regex: isActive, $options: "i" };
     }
 
     const contactUs = await contactUsModel
@@ -196,7 +200,7 @@ const sendReply = async (req, res) => {
         messageContent: sendReply,
       }
     );
-    await contactUsModel.findByIdAndUpdate(id, { reply: sendedReply });
+    await contactUsModel.findByIdAndUpdate(id, { reply: sendedReply,isActive:false });
     return res.status(200).json({
       success: true,
       message: "Reply sent successfully",

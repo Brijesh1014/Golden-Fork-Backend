@@ -26,6 +26,9 @@ const ContactUs = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "ReplySend",
     },
+    isActive:{
+      type:Boolean
+    }
   },
   { timestamps: true }
 );
