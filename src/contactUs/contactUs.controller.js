@@ -69,7 +69,7 @@ const getAllContactUs = async (req, res) => {
       filter.subject = { $regex: subject, $options: "i" };
     }
     if (isActive) {
-      filter.isActive = { $regex: isActive, $options: "i" };
+      filter.isActive = isActive
     }
     if (messageTitle) {
       filter.messageTitle = { $regex: messageTitle, $options: "i" };
