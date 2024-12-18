@@ -53,7 +53,7 @@ const createContactUs = async (req, res) => {
 };
 const getAllContactUs = async (req, res) => {
   try {
-    const { page = 1, limit = 10, name, email, subject,isActive } = req.query;
+    const { page = 1, limit = 10, name, email, subject,isActive,messageTitle } = req.query;
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
     const skip = (pageNumber - 1) * pageSize;
@@ -70,6 +70,9 @@ const getAllContactUs = async (req, res) => {
     }
     if (isActive) {
       filter.isActive = { $regex: isActive, $options: "i" };
+    }
+    if (messageTitle) {
+      filter.messageTitle = { $regex: messageTitle, $options: "i" };
     }
 
     const contactUs = await contactUsModel
