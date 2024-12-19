@@ -53,15 +53,31 @@ const createTable = async (req, res) => {
 
 const getAllTables = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, restaurantName } = req.query;
+
+
     const pageNumber = parseInt(page);
     const pageSize = parseInt(limit);
     const skip = (pageNumber - 1) * pageSize;
-    const totalTableCount = await Table_Model.countDocuments();
-    const tables = await Table_Model.find()
-    .populate("createdBy restaurantId")
-    .skip(skip)
-    .limit(pageSize);
+
+    const query = {};
+
+    let tablesQuery = Table_Model.find(query)
+      .populate({
+        path: "restaurantId",
+        match: restaurantName
+          ? { name: { $regex: new RegExp(restaurantName.trim(), "i") } }
+          : {},
+      })
+      .populate("createdBy")
+      .skip(skip)
+      .limit(pageSize);
+
+    const tables = await tablesQuery.exec();
+
+    const filteredTables = tables.filter((table) => table.restaurantId !== null);
+
+    const totalTableCount = await Table_Model.countDocuments(query);
 
     const totalPages = Math.ceil(totalTableCount / pageSize);
     const remainingPages =
@@ -70,21 +86,25 @@ const getAllTables = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Tables retrieved successfully",
-      tables,
+      tables: filteredTables,
       meta: {
-        totalTableCount,
+        totalTableCount: filteredTables.length,
         currentPage: pageNumber,
         totalPages,
         remainingPages,
-        pageSize: tables.length,
+        pageSize: filteredTables.length,
       },
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+    console.error("Error fetching tables:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      details: error.message,
+    });
   }
 };
+
 const getTableById = async (req, res) => {
     try {
       const { id } = req.params; 
