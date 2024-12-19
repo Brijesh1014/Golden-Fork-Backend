@@ -59,10 +59,10 @@ const getAllCategories = async (req, res) => {
     const totalCategoryCount = await Category.countDocuments(filter);
     const totalActiveCategoriesCount = await Category.find({
       isActive: true,
-    }).countDocuments();
+    }).countDocuments(filter);
     const totalDeActiveCategoriesCount = await Category.find({
       isActive: false,
-    }).countDocuments();
+    }).countDocuments(filter);
 
     const categories = await Category.find(filter)
       .populate("createdBy", "name email")
