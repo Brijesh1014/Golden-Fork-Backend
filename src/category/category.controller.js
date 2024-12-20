@@ -122,36 +122,62 @@ const getCategoryById = async (req, res) => {
 const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { categoryName, description } = req.body;
+    const { categoryName, description, items } = req.body;
 
-    if (!categoryName) {
-      return res
-        .status(400)
-        .json({ error: "Category name is required for update." });
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: "Category ID is required.",
+      });
+    }
+
+    if (items && items.length > 0) {
+      const itemCount = await categoryItem.countDocuments({
+        _id: { $in: items },
+      });
+
+      if (itemCount !== items.length) {
+        return res.status(400).json({
+          success: false,
+          error: "One or more provided items do not exist.",
+        });
+      }
     }
 
     const updatedCategory = await Category.findByIdAndUpdate(
       id,
-      { categoryName },
+      { categoryName, description,items },
       { new: true }
     );
 
     if (!updatedCategory) {
-      return res.status(404).json({ error: "Category not found." });
+      return res.status(404).json({
+        success: false,
+        error: "Category not found.",
+      });
     }
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Category updated successfully.",
-        category: updatedCategory,
-      });
+    if (items && items.length > 0) {
+      await categoryItem.updateMany(
+        { _id: { $in: items } },
+        { categoryId: id }
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Category updated successfully.",
+      category: updatedCategory,
+    });
   } catch (error) {
     console.error("Error updating category:", error);
-    res.status(500).json({ error: "Server error. Unable to update category." });
+    res.status(500).json({
+      success: false,
+      error: "Server error. Unable to update category.",
+    });
   }
 };
+
 
 const deleteCategory = async (req, res) => {
   try {
