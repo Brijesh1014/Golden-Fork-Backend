@@ -53,7 +53,7 @@ const createTable = async (req, res) => {
 
 const getAllTables = async (req, res) => {
   try {
-    const { page = 1, limit = 10, restaurantName } = req.query;
+    const { page = 1, limit = 10, restaurantName,restaurantStatus } = req.query;
 
 
     const pageNumber = parseInt(page);
@@ -62,13 +62,14 @@ const getAllTables = async (req, res) => {
 
     const query = {};
 
-    let tablesQuery = Table_Model.find(query)
-      .populate({
-        path: "restaurantId",
-        match: restaurantName
-          ? { name: { $regex: new RegExp(restaurantName.trim(), "i") } }
-          : {},
-      })
+    let tablesQuery = Table_Model.find(query).populate({
+      path: "restaurantId",
+      match: {
+        ...(restaurantName && { name: { $regex: new RegExp(restaurantName.trim(), "i") } }),
+        ...(restaurantStatus && { status: { $regex: new RegExp(restaurantStatus.trim(), "i") } }),
+      },
+    })
+    
       .populate("createdBy")
       .skip(skip)
       .limit(pageSize);
