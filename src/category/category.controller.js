@@ -121,8 +121,8 @@ const getCategoryById = async (req, res) => {
 
 const updateCategory = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { categoryName, description, items } = req.body;
+    const { id } = req.params; 
+    const { categoryName, description, removeItems } = req.body; 
 
     if (!id) {
       return res.status(400).json({
@@ -131,43 +131,48 @@ const updateCategory = async (req, res) => {
       });
     }
 
-    if (items && items.length > 0) {
-      const itemCount = await categoryItem.countDocuments({
-        _id: { $in: items },
+    if (removeItems && removeItems.length > 0) {
+      const removeItemsCount = await categoryItem.countDocuments({
+        _id: { $in: removeItems },
       });
 
-      if (itemCount !== items.length) {
+      if (removeItemsCount !== removeItems.length) {
         return res.status(400).json({
           success: false,
-          error: "One or more provided items do not exist.",
+          error: "One or more items to be removed do not exist.",
         });
       }
     }
 
-    const updatedCategory = await Category.findByIdAndUpdate(
-      id,
-      { categoryName, description,items },
-      { new: true }
-    );
-
-    if (!updatedCategory) {
+    const currentCategory = await Category.findById(id);
+    if (!currentCategory) {
       return res.status(404).json({
         success: false,
         error: "Category not found.",
       });
     }
 
-    if (items && items.length > 0) {
+    if (categoryName) currentCategory.categoryName = categoryName;
+    if (description) currentCategory.description = description;
+
+
+    if (removeItems && removeItems.length > 0) {
+      currentCategory.items = currentCategory.items.filter(
+        (item) => !removeItems.includes(item.toString())
+      );
+
       await categoryItem.updateMany(
-        { _id: { $in: items } },
-        { categoryId: id }
+        { _id: { $in: removeItems } },
+        { $unset: { categoryId: "" } }
       );
     }
+
+    await currentCategory.save();
 
     res.status(200).json({
       success: true,
       message: "Category updated successfully.",
-      category: updatedCategory,
+      category: currentCategory,
     });
   } catch (error) {
     console.error("Error updating category:", error);
